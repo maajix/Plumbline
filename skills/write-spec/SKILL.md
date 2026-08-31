@@ -17,6 +17,9 @@ and read the current source of anything the feature touches. One exception:
 a successor effort's spec takes the closing effort's spec plus the moved
 tickets as its input instead — `close-effort` says when.
 
+A `shape.md` carrying `**Status:** unshaped` is a stub shape, not spec
+input — it never had an interview. Run `shape-idea` on it first.
+
 ## Lead with the paths
 
 The first and longest section is a numbered list of paths. Each is one
@@ -58,7 +61,8 @@ and that seam is the thing a ticket will have to prove.
 ## The rest, and it is short
 
 **Not this.** Carried over from the shape, plus anything the spec ruled out
-while being written. Each line says why.
+while being written. Each line says why; a `split off:` line carries the
+folder path in place of the why.
 
 **Decided at the edges.** The concrete situations and their answers, from the
 shape. Add any the spec had to settle.
@@ -76,6 +80,17 @@ serves. What must be true before this effort closes. Every criterion belongs to
 this effort or names the effort that owns it — an unowned criterion makes the
 effort permanently unclosable, because every ticket can be done and it still
 reads as unfinished.
+
+Every In scope bullet in the shape ending `— must hold before close` becomes
+an `E<n>` here, quoting the bullet's words so the pairing is greppable, and
+the link is counted, not trusted:
+`grep -c '^- .*— must hold before close$' docs/issues/<effort>/shape.md`
+prints the number of tagged In scope bullets, and each one has an `E<n>`
+quoting it. That tag is the shape's only way to name an exit criterion
+before a spec exists — a line the shape wrote that this section did not read
+would be the same defect the Load section below exists for. A successor spec
+written in synthesis mode has no `shape.md` and no count: the moved `E<n>`
+numbers are the whole check there.
 
 Numbering matters: `cut-slices` gives each ticket a `Serves exit criterion`
 field, and an exit criterion no ticket names is work nobody is doing.
@@ -110,9 +125,14 @@ reads would be the same defect, moved one file to the right.
 stale path in a spec is read as fact. Name types and behaviours; let the
 builder find the file.
 
-The verify command is the one exception, and it is exempt for the same reason
-the rule exists: a stale path is read as fact, while a stale command fails the
-moment someone runs it. It earns its place by being run, not by being read.
+The verify command is the first of two exceptions, and it is exempt for the
+same reason the rule exists: a stale path is read as fact, while a stale
+command fails the moment someone runs it. It earns its place by being run, not by being read.
+
+`docs/issues/` addresses carried from the shape's `split off:` bullets are
+the second: they are the flow's own bookkeeping, and `close-effort`'s
+split-off ledger runs `ls` over every one — a stale address is rewritten
+there or handed to `hold-the-line` as a finding, never left standing.
 
 **Say what is true now.** Where the spec describes existing behaviour, read the
 current source and say what it actually does. A spec that describes the code as

@@ -84,7 +84,7 @@ No install needed to read it: every skill is a plain Markdown file under
 
 | # | Command | Skill | Produces |
 |---|---|---|---|
-| 1 | `/shape` | `shape-idea` | `interview.md`, `shape.md` |
+| 1 | `/shape` | `shape-idea` | `interview.md`, `shape.md`, a stub shape per newly split-off sub-problem |
 | 2 | `/spec` | `write-spec` | `spec.md` + cold read |
 | 3 | `/slice` | `cut-slices` | `NN-*.md` tickets + cold read |
 | 4 | `/build` | `build-slice` | code + seam test — one session per ticket |
@@ -104,7 +104,9 @@ takes it to `claimed` through build, bar and commit, and `review-pass` writes
 placed a criterion on it. Details: [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
 
 All artefacts of an effort live under `docs/issues/<effort>/`: `interview.md`,
-`shape.md`, `spec.md`, `live-inputs.md`, and the tickets as `NN-<slug>.md`.
+`shape.md`, `spec.md`, `live-inputs.md`, and the tickets as `NN-<slug>.md`. A
+sub-problem a shaping interview splits off gets its own slug:
+`docs/issues/<its-slug>/shape.md`.
 
 ## The four rules
 

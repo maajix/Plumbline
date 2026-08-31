@@ -55,7 +55,13 @@ Every `E<n>` in the spec. Each is either met, or moved out into a named
 successor effort in the same edit.
 
 Check it from the tickets: each names the criterion it serves. A criterion no
-ticket names is work nobody did.
+ticket names is work nobody did. And check the set is complete against the
+shape: `grep -c '^- .*— must hold before close$' docs/issues/<effort>/shape.md`
+prints the number of tagged In scope bullets, and each has its `E<n>` — met
+here or moved out, never lost between shape and spec. A successor effort
+built in synthesis mode has no `shape.md` and no count: its criteria came in
+with the moved tickets, keeping their `E<n>` numbers, and the numbers are
+the check.
 
 ### 3. Ticket statuses
 
@@ -102,6 +108,25 @@ successor there are none — the exemption expires with the effort), **move**
 it to the successor effort with the ticket that owns its path, or **retire**
 it with the reason a decision, not a shrug. A closed effort keeps no replay
 obligations.
+
+## The split-off ledger
+
+Not a fifth walk and not blocking on its own — but it writes into the close
+block like the walks do. Enumerate this effort's split ends with
+`grep -rn 'split off:' docs/issues/<effort>/` — shape and spec both — and
+run `ls` on each `docs/issues/` address, recording every address with its
+result. A missing folder is a stale address read as fact by every session
+since the spec carried it: rewrite the bullet to where the effort actually
+lives, in this edit, or hand it to `hold-the-line` as a finding — those are
+the two endings, and a shrug is neither.
+
+Then run
+`grep -rln '^\*\*Discovered while shaping:\*\* <effort>,' docs/issues/` — the
+trailing comma keeps `export` from also matching `export-audit` — and check
+each hit's `**Status:**` line: the still-`unshaped` hits are stubs this
+effort minted that nobody picked up. Name them in the close block — not
+settled and not blocking, just visible at the one moment someone decides
+what happens next.
 
 ## When to close early
 

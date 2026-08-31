@@ -183,7 +183,9 @@ field, so this is checkable rather than remembered.
 
 Five values, the same in every skill of this flow: `open`, `claimed`,
 `resolved`, `blocked — needs decision`, `declined`. Anything not `resolved` or
-`declined` can receive a criterion.
+`declined` can receive a criterion. A stub shape's `**Status:** unshaped` is
+a `shape.md` value, never a ticket's — the five above stay the whole ticket
+vocabulary.
 
 Say the value, not "open", when you mean the whole unfinished set. A REOPEN
 verdict writes `claimed`, and a reader who takes "open" literally will not find

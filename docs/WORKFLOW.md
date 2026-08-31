@@ -4,6 +4,7 @@ Acht Tore. Jedes hat einen Skill und eine Datei, die es hinterlässt.
 
 ```
 1 SHAPE     shape-idea    -> interview.md, shape.md   nur Produktfragen
+                             + Stub-Shape je neu abgespaltenem Teilproblem
 2 SPEC      write-spec    -> spec.md                  + cold-read
 3 SLICE     cut-slices    -> NN-*.md                  + cold-read
 4 BUILD     build-slice   -> Code + Nahttest          je Ticket eine Session
