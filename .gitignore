@@ -1,0 +1,26 @@
+.DS_Store
+
+# Editor-Konfiguration
+.idea
+.vscode
+
+# Lokale Claude-Code-Konfiguration. Das Plugin selbst liegt in .claude-plugin/,
+# skills/ und commands/ — nichts davon gehoert hierher.
+.claude/
+.mcp.json
+
+# Platzhalter, die eine sandboxed Session im Arbeitsverzeichnis anlegt
+# (meist leere Dateien oder /dev/null-Devices). Nicht Teil des Plugins.
+.bash_profile
+.bashrc
+.profile
+.ripgreprc
+.zprofile
+.zshrc
+.gitconfig
+
+# Bewusst nicht ignoriert: .gitmodules. Es ist derselbe Sandbox-Platzhalter wie
+# die Zeilen darueber, aber blind ignoriert wuerde es ein spaeteres
+# `git submodule add` still kaputtmachen — die Datei entstuende, waere unsichtbar
+# und das Submodul fehlte beim Klonen. Eine Zeile in `git status` ist der
+# billigere Preis, aber nur, solange hier steht, dass sie gewollt ist.

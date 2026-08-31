@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "plumbline",
+  "description": "Delivery workflow for coding agents: shape, spec, slice, build, prove, review, verdict, close.",
+  "owner": {
+    "name": "majix"
+  },
+  "plugins": [
+    {
+      "name": "plumbline",
+      "source": "./",
+      "description": "Idea to shipped feature without backlog explosion.",
+      "license": "MIT",
+      "keywords": [
+        "workflow",
+        "spec",
+        "tickets",
+        "review",
+        "seams"
+      ]
+    }
+  ]
+}
