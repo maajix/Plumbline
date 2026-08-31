@@ -158,29 +158,23 @@ tickets that a backlog could explode at all. For a two-liner the ceremony costs
 more than the work — there, `build-slice` §2/§5 (red test, seam proof) and
 `hold-the-line` on their own are enough.
 
-## State of validation
+## Status
 
-Honest about what is and isn't measured:
+Run for real three times, not just designed. A full chain in a throwaway repo —
+red test, mutation step, seam check, live replays, verdicts through to
+`resolved`, and a close correctly refused because a ticket was still open. A
+second run deliberately suffered the session boundary: death mid-build, handoff,
+resume, a dying review, a real `REOPEN`. A third ran the prescribed review mode
+properly — four parallel axis subagents that could not see each other. No
+blockers in any run, and every rule gap they found is fixed. On top of that, an
+independent multi-agent review across seven reading axes, adversarially
+verified.
 
-- **Ran for real, three times.** A throwaway repo, a toy feature, spec, three
-  tickets, two built — red test, mutation step, seam check, live replays, build
-  and review commits, verdicts through to `resolved`, and a close that was
-  correctly refused because a ticket was still open. A second run deliberately
-  suffered the session boundary instead of reading about it: death mid-build
-  with handoff and resume, a dying review, a real `REOPEN`. A third run executed
-  the prescribed review mode properly — four parallel axis subagents that could
-  not see each other. No blockers; the rule gaps each run found are fixed.
-- **The thinnest spot, stated plainly.** A seam test proves two ends talk. It
-  never proves they tell the truth. One run shipped a chain that ran green
-  against a stand-in and measured the wrong thing entirely. `cut-slices` rule 3b
-  now forces the ticket to name what checks the *real* thing, and whether the
-  test runs against a stand-in or the original. This remains the weakest part.
-- **Unmeasured:** brownfield codebases and successor efforts.
+A seam test proves two ends talk. It never proves they tell the truth — which is
+why `cut-slices` rule 3b makes the ticket name what checks the real thing.
 
-Full report with residual risks: [`docs/VALIDATION.md`](docs/VALIDATION.md).
-
-Note: `docs/DIAGNOSIS.md` and `docs/WORKFLOW.md` are written in German;
-`docs/VALIDATION.md` is mixed. The skills, commands and this README are English.
+Full report, residual risks and what is still unmeasured:
+[`docs/VALIDATION.md`](docs/VALIDATION.md).
 
 ## Credits and prior art
 
@@ -208,3 +202,6 @@ by the same author, bundled here so the plugin runs without prerequisites.
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
+
+`docs/DIAGNOSIS.md` and `docs/WORKFLOW.md` are written in German,
+`docs/VALIDATION.md` is mixed. The skills, commands and this README are English.
