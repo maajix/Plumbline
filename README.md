@@ -8,7 +8,9 @@ Eight gates, eleven skills, one rule that stops the backlog from growing once
 per finished ticket. MIT.
 
 ```
-idea ──▶ shape ──▶ spec ──▶ slice ──▶ build ──▶ prove ──▶ review ──▶ verdict ──▶ close
+once per effort   idea ─▶ shape ─▶ spec ─▶ slice                  close
+                                                                    ▲
+once per ticket           build ─▶ review ─▶ verdict ─▶ next ticket ┘
 ```
 
 ## The problem
@@ -87,11 +89,22 @@ No install needed to read it: every skill is a plain Markdown file under
 | 1 | `/shape` | `shape-idea` | `interview.md`, `shape.md`, a stub shape per newly split-off sub-problem |
 | 2 | `/spec` | `write-spec` | `spec.md` + cold read |
 | 3 | `/slice` | `cut-slices` | `NN-*.md` tickets + cold read |
-| 4 | `/build` | `build-slice` | code + seam test — one session per ticket |
-| 5 | `/prove` | `seam-check` | seam report inside the ticket |
-| 6 | `/review-pass` | `review-pass` | findings, with severity |
-| 7 | `/verdict` | `hold-the-line` | one of six verdicts |
+| 4 | `/build` | `build-slice` | code + seam test — **per ticket**, one session |
+| 5 | `/prove` | `seam-check` | **reads** the seam report — the pass itself already ran inside `/build` §5 |
+| 6 | `/review-pass` | `review-pass` | findings, with severity — **per ticket**, right after its build |
+| 7 | `/verdict` | `hold-the-line` | one of six verdicts — **per finding** |
 | 8 | `/close` | `close-effort` | the effort ends instead of drifting |
+
+Gates 1–3 run once for the whole effort. Gates 4–7 are a **loop, once per
+ticket**: build it, review that one ticket, give every finding a verdict, then
+the next ticket. Do not build all the tickets and review them together — gate 6
+pins its diff to one ticket's first build commit, so three tickets in the diff
+is two tickets of noise on every axis.
+
+Gate 5 is the exception: it runs on its own, as step 5 of `build-slice`. You
+normally never type `/prove` — the command is there to re-read that report
+later, and re-running the full pass per ticket is exactly what the gate is
+written to avoid.
 
 Every command is also reachable namespaced: `/plumbline:build`,
 `/plumbline:review-pass`. The review command is deliberately called
@@ -107,6 +120,55 @@ All artefacts of an effort live under `docs/issues/<effort>/`: `interview.md`,
 `shape.md`, `spec.md`, `live-inputs.md`, and the tickets as `NN-<slug>.md`. A
 sub-problem a shaping interview splits off gets its own slug:
 `docs/issues/<its-slug>/shape.md`.
+
+## One effort, three tickets
+
+What you actually type, start to finish.
+
+```
+/shape   billing needs a dunning email when a card fails
+/spec
+/slice                       # -> 01-*.md, 02-*.md, 03-*.md
+```
+
+Then the loop, once per ticket:
+
+```
+/build 01                    # ticket 01 is the walking skeleton: it runs end to end
+/review-pass                 # no argument: takes the ticket from the newest build commit
+/verdict                     # one verdict per finding, until none says "— verdict pending"
+```
+
+When that cycle closes clean, `review-pass` writes `**Status:** resolved`
+itself and makes the review commit. If a verdict placed a criterion or a NOW
+fix on the ticket, repair it and run `/review-pass` again — that is cycle 2, and
+three cycles is the cap.
+
+```
+/build                       # no argument: 01 is resolved, so the frontier is 02
+/review-pass
+/verdict
+
+/build                       # 03
+/review-pass
+/verdict
+
+/close                       # settles forward references, exit criteria, statuses
+```
+
+That is the whole flow. Three things worth knowing while it runs:
+
+- **The ticket stays `claimed` through the build.** That is deliberate, not a
+  missed step: a `required` finding can still land on it as a criterion, even
+  for the last ticket of the effort. Only `review-pass` writes `resolved`.
+- **A session that dies mid-ticket costs you nothing.** `build-slice` leaves a
+  `## Handoff` block and the ticket stays `claimed`; the next session just runs
+  `/build`, because §0 takes every `claimed` ticket before every `open` one.
+  Handing over is not replanning — re-cutting belongs to `/verdict`, after the
+  review.
+- **New work found mid-flight goes through `/verdict`, never straight into a new
+  ticket file.** That gate is the one thing keeping the backlog from growing
+  once per finished ticket.
 
 ## The four rules
 
