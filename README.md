@@ -8,10 +8,8 @@ Eight gates, eleven skills, one rule that stops the backlog from growing once
 per finished ticket. MIT.
 
 ```
-once per effort   idea -> shape -> spec -> slice        ... then close
-once per ticket                            build -> review -> verdict
-                                           ^                     |
-                                           +---- next ticket ----+
+once per effort:  idea -> shape -> spec -> slice ....... then close
+once per ticket:  build -> review -> verdict -> the next ticket
 ```
 
 ## The problem
