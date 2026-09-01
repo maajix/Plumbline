@@ -1,6 +1,7 @@
 ---
 name: close-effort
 description: Closes an effort by settling every debt it opened. Use when an effort's tickets look done, when deciding whether to split an effort that has grown, or when the user asks whether a feature is finished. Walks the forward references, the exit criteria and the ticket statuses so an effort can end rather than drift.
+user-invocable: false
 ---
 
 # Close the effort

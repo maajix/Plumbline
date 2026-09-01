@@ -1,6 +1,7 @@
 ---
 name: write-spec
 description: Turns a shape into a spec organised around paths that run, not components that exist. Use after shape-idea, when writing a spec or PRD, when an existing spec needs checking before tickets are cut from it, or whenever the user asks for a spec. A component-shaped spec is what produces component-shaped tickets, so this runs before cut-slices.
+user-invocable: false
 ---
 
 # Write the spec

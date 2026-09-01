@@ -1,6 +1,7 @@
 ---
 name: cut-slices
 description: Cuts a spec into tickets that each leave something running end-to-end. Use when turning a spec into tickets, breaking a feature down, planning an effort, sizing work for an agent session, or when an existing ticket plan needs checking for seam coverage. Every ticket names both ends of its seam, so integration defects cannot pile up until the first real run.
+user-invocable: false
 ---
 
 # Cut slices, not components

@@ -1,6 +1,7 @@
 ---
 name: review-pass
 description: Reviews a ticket's work along four axes, labels every finding blocker/required/nit, and hands each to hold-the-line for its verdict. Use after building a ticket, before merging a branch, when reviewing a diff or a PR, or when the user asks to review changes since a point. Bounded to three cycles so a review cannot turn into a ticket factory.
+user-invocable: false
 ---
 
 # Review pass

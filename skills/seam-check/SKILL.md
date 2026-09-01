@@ -1,6 +1,7 @@
 ---
 name: seam-check
 description: Proves that what a change wrote is actually read, and what it reads is actually written. Use after implementing a ticket, before opening a review, when a feature does nothing despite green tests, or when auditing an effort for dead wiring. Catches written-by-nothing and read-by-nothing defects before the first real run does.
+user-invocable: false
 ---
 
 # Seam check

@@ -1,6 +1,7 @@
 ---
 name: shape-idea
 description: Interrogates an idea at product altitude before any spec exists. Use when starting a new feature or effort, when an idea is still fuzzy, when the user says 'shape this', 'grill me', 'stress-test this idea', when a waiting stub shape is picked up, or before writing any spec. Asks only what the user alone can answer, parks every technical unknown as agent work so the interview never drifts into implementation questions, and mints a stub shape for any sub-problem that turns out to be its own effort.
+user-invocable: false
 ---
 
 # Shape the idea

@@ -1,6 +1,7 @@
 ---
 name: hold-the-line
 description: "Decides what happens to a discovered problem: fixed now, added as an acceptance criterion, sent back to the ticket that shipped it, recognised as already owned, cut as a new ticket, or declined in writing. Use whenever a review, test run, debug session or implementation turns up work that was not planned, and before opening any unplanned ticket. This is the gate that stops a backlog growing once per completed ticket."
+user-invocable: false
 ---
 
 # Hold the line

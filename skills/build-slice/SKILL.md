@@ -1,6 +1,7 @@
 ---
 name: build-slice
 description: Implements exactly one ticket in one session and leaves the ticket file honest about what happened. Use when implementing a ticket, working an effort's frontier, resuming a claimed ticket that carries a Handoff block ('continue ticket NN', 'pick up where it stopped'), or when the user says 'build ticket NN' or 'implement this'. Covers the moment the ticket turns out to be wrong mid-flight, which is where unplanned tickets normally get created.
+user-invocable: false
 ---
 
 # Build one slice
