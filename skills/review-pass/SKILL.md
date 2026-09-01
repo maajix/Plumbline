@@ -235,3 +235,11 @@ resolver — better than before, and wrong.
 
 Approve even when it is not how you would have written it. Perfect code does not exist and blocking on
 taste turns the review into another source of tickets.
+
+## The next step
+
+When the cycle closes clean, end your final message by naming it: start a
+**fresh session** and run `/plumbline:build` for the next frontier ticket — or
+`/plumbline:close` when no ticket is left `open` or `claimed`. A ticket set
+`blocked — needs decision` has no next command; it has a question, and the
+message ends with that question instead.

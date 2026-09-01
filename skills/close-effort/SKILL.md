@@ -169,3 +169,11 @@ like every other move in this skill. Grep the whole repo for the old folder path
 first, rewrite every hit in the same edit, and record the count in the close
 block. A move that leaves one pointer behind is the defect this flow exists to
 prevent, arriving just after the last gate that could have caught it.
+
+## The next step
+
+End your final message by naming it: the flow ends here. The next feature
+starts in a **fresh session** with `/plumbline:shape <idea>` — and if the close
+walks passed waiting stub shapes (`**Status:** unshaped`), list them as
+candidates. A refused close ends with the debts that refused it, not with a
+command.

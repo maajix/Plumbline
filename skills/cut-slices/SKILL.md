@@ -378,3 +378,10 @@ settle its open questions — so when the skeleton lands, re-read the remaining
 tickets against what it showed. A re-cut at that point goes through
 `hold-the-line`'s criteria count like any other; what it never does is happen
 silently.
+
+## The next step
+
+End your final message by naming it: start a **fresh session** and run
+`/plumbline:build` — §0 picks the frontier, which for a new effort is the
+walking skeleton. Build gets one session per ticket, and this session holds a
+planner's context, not a builder's.

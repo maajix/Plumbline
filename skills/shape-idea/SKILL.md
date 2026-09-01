@@ -236,3 +236,11 @@ questions. They are answered **before or inside** the walking skeleton, never as
 tickets of their own: a research question produces no value anything reads, so
 it satisfies neither `cut-slices` Rule 2 nor Rule 3. Answer it, record the answer
 in the spec, and let the first ticket built stay the walking skeleton.
+
+## The next step
+
+End your final message by naming it: **stay in this session** and run
+`/plumbline:spec <effort>` — the interview's answers are the spec's input, and
+a fresh session would only re-read what this one already holds. If the
+interview minted stub shapes, list them too; each waits for its own
+`/plumbline:shape` later, never now.

@@ -148,3 +148,9 @@ Run `cold-read` over the finished spec. Then answer, in writing:
 
 A path that cannot is a path that is too big. Split it in the spec, where it is
 one line of work, rather than in the tickets, where it is ten.
+
+## The next step
+
+End your final message by naming it: **stay in this session** and run
+`/plumbline:slice <effort>` — the spec's paths are still in context, and the
+cold read above already bought the fresh-eyes pass a new session would buy.
