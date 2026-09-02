@@ -10,11 +10,8 @@ Every review defers something. If every deferral mints a ticket, the backlog
 grows once per completed ticket and the effort never visibly shrinks — even when
 the work is nearly done.
 
-Observed both ways. One effort with this rule written down: 14 tickets done, net
-growth about +3. One effort without it: tickets 76-80 filed by implementation
-reviews, 81-83 by live validation, 87-88 by one final review, 89-92 by the
-questions those raised. It reached 165. Two efforts do not isolate one rule as
-the cause, but the direction of the difference is what this skill bets on.
+Observed both ways: an effort carrying this rule held at net +3 tickets, one
+without it reached 165 (`${CLAUDE_PLUGIN_ROOT}/docs/DIAGNOSIS.md`).
 
 **A finding is not automatically a ticket.** It is also not automatically
 deferred, which is the mistake the first version of this skill made.
@@ -22,6 +19,13 @@ deferred, which is the mistake the first version of this skill made.
 And without an effort's ticket files — a bare PR or diff review outside this
 flow — there is nothing to write a verdict into: report the findings with
 their severities and stop. The six verdicts begin where tickets exist.
+
+## When invoked as `/verdict`
+
+With no argument the findings are every entry still marked `— verdict pending`
+in the current effort, which `close-effort`'s "Which effort" picks. Run
+`grep -rn '— verdict pending' docs/issues/<effort>/`. Only entry lines are open
+findings; a hit that quotes the marker inside a paste is history.
 
 ## Severity decides first
 
@@ -35,9 +39,9 @@ decoration.
 | `required` | must be right before the effort closes | any of the six |
 | `nit` | costs less to fix than to record | **NOW** or **DECLINE** |
 
-A blocker never becomes a deferred criterion. In testing, this skill sent a
-measured guaranteed crash and an unused variable to the same verdict, and the
-crash stayed merged and green. That is the failure this table exists to stop.
+A blocker never becomes a deferred criterion — an early version of this skill
+sent a guaranteed crash and an unused variable to the same verdict, and the
+crash stayed merged and green.
 
 ## The six verdicts
 
@@ -53,15 +57,15 @@ the ticket you are standing in. Do it, and note it in one line. Any NOW repair
 that changes production code gets its own failing test first, whatever the
 severity — a review repair without a red test is the mid-session failure
 CRITERION warns about, one verdict to the left — **and** re-runs the
-standing bar's machine lines, appending the paste dated to the ticket's
-`## Bar` block: the repair rides the review commit, which the next cycle
-pins as its fixed point, so no later diff ever re-reads it — the red test
-and this paste are all the checking it will ever get. Only a repair that
-touches no production code — a comment, a doc line — skips both.
+standing bar's machine lines, appending the paste **under the ticket's existing
+`## Bar` heading, never as a new `## Bar, <date>` heading** — a dated heading
+is a build's. The repair rides the review commit, which the next cycle pins as
+its fixed point, so the red test and this paste are all the checking it will
+ever get. Only a repair that touches no production code — a comment, a doc
+line — skips both.
 
-This is the verdict for trivia. Without it, a thirty-second cleanup becomes a
-criterion on an unrelated ticket, which is bookkeeping that costs more than the
-work.
+This is the verdict for trivia: without it a thirty-second cleanup becomes a
+criterion on an unrelated ticket.
 
 ### 2. CRITERION — the default for planned work
 
@@ -80,10 +84,8 @@ Write it into that ticket in this edit, before implementing anything.
 - **On the ticket you are standing in** — work for *this* session. Do it now,
   and **give it its own failing test first**. A criterion added mid-session is
   the one most likely to be built without a red test, because the red-first
-  habit attaches to the ticket's headline seam. When the criterion adds an
-  assertion over behaviour that is already correct, the test is born green —
-  then `build-slice` §2's discrimination check carries the proof alone: break
-  the literal, watch red, restore, record the `Mutated:` line.
+  habit attaches to the ticket's headline seam. A criterion over behaviour that
+  is already correct is born green — `build-slice` §2 says what proves it.
 
 ### 3. REOPEN — the ticket that shipped it takes it back
 
@@ -107,9 +109,8 @@ does. And a `resolved` ticket whose landed work already satisfies the
 finding is ownership in its strongest form — name the ticket and the
 commit; DECLINE would be a lie here, because the work *was* done.
 
-This is not a criterion and it is not a decline. Without it, the honest move is
-to write a criterion and note that nothing was added, which is a lie shaped like
-compliance.
+This is not a criterion and it is not a decline — without it the honest move
+would be a criterion recording that nothing was added.
 
 ### 5. TICKET — only on one of two tests
 
@@ -134,10 +135,8 @@ finding.
 
 ## Watch the criteria, not just the tickets
 
-Counting tickets alone hides the problem. In testing the ticket count held at 8
-exactly as designed, while one ticket went from 3 criteria to 8 — spanning a
-wire parser, a network default, a CLI refactor and two new tests. The count was
-honest and the work had tripled.
+Counting tickets alone hides the problem: measured, a ticket count held at 8
+while one ticket went from 3 criteria to 8 and its work tripled.
 
 So after a review, count both:
 
@@ -149,14 +148,15 @@ So after a review, count both:
   spanning more than one seam, has stopped satisfying `cut-slices` Rule 4. Split it. Rule 4 has no
   enforcement point after cutting, so this is it.
 
-Splitting mid-effort follows `cut-slices` "Numbers are addresses": the split
-ticket file stays in place with `**Status:** declined` and the reason
-`split into 14a, 14b`, and the splitting session rewrites every
-`CONSUMED BY: ticket 14` line (on disk `**CONSUMED BY:** ticket 14` — find
-them with `grep -rn 'ticket 14' docs/issues/<effort>/`) **and** every
-`Blocked by` entry naming `14` to the half that owns it, in the same edit,
-redeeming nothing. A `claimed` ticket with a `## Handoff` is split only after its `Red:`
-line has moved into the half that owns that test.
+**The split procedure**, owned here because the split happens at verdict time.
+Never renumber. The split ticket file stays in place with
+`**Status:** declined` and the reason `split into 14a, 14b`. In the same edit,
+rewrite every `CONSUMED BY: ticket 14` line (on disk
+`**CONSUMED BY:** ticket 14` — find them with
+`grep -rn 'ticket 14' docs/issues/<effort>/`) **and** every `Blocked by` entry
+naming `14` to the half that owns it, redeeming nothing. A `claimed` ticket
+with a `## Handoff` is split only after its `Red:` line has moved into the half
+that owns that test.
 
 ## The ceiling is real
 
@@ -164,9 +164,9 @@ line has moved into the half that owns that test.
 push the effort past it, that is the signal to **close this effort and open the
 next one**, not to grow.
 
-Closing is `close-effort`'s job, and its first walk is what makes the close
-honest: every forward reference is redeemed, deleted, or moved with both of its
-ends. An effort that cannot close is a program.
+Closing is `close-effort`'s job, and its first walk settles every forward
+reference in one of `cut-slices` Rule 5's three endings. An effort that cannot
+close is a program.
 
 ## Exit criteria need owners
 
@@ -182,11 +182,10 @@ field, so this is checkable rather than remembered.
 
 ## Status vocabulary
 
-Five values, the same in every skill of this flow: `open`, `claimed`,
-`resolved`, `blocked — needs decision`, `declined`. Anything not `resolved` or
-`declined` can receive a criterion. A stub shape's `**Status:** unshaped` is
-a `shape.md` value, never a ticket's — the five above stay the whole ticket
-vocabulary.
+The values are the ones `cut-slices`'s ticket template lists, and no skill in
+this flow adds a sixth. Anything not `resolved` or `declined` can receive a
+criterion. A stub shape's `**Status:** unshaped` is a `shape.md` value, never a
+ticket's.
 
 Say the value, not "open", when you mean the whole unfinished set. A REOPEN
 verdict writes `claimed`, and a reader who takes "open" literally will not find
@@ -216,6 +215,8 @@ Review cycle N of 3 — undecided: seam 1, craft 2
 ```
 
 Once every verdict is in, the cycle line's tail reads `undecided: none`.
+`<date>` is `YYYY-MM-DD`, as in every heading of this flow (`cut-slices`
+template).
 
 The axis tag in brackets is the reader that raised it (`build` for
 `build-slice` §4 discoveries), the severity survives into the entry, and the

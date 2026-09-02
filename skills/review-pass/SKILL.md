@@ -8,27 +8,32 @@ user-invocable: false
 
 A review is a **cold read** of a finished thing: whole artifact, top to bottom,
 findings at the end, repairs on request. Read `cold-read` for the mode. This
-skill adds what to look for and what happens to each finding.
+skill adds what to look for and what happens to each finding. Skills named in
+this flow are this plugin's — invoke `plumbline:<name>`, not a same-named
+standalone skill.
 
 On a bare PR or diff with no ticket file behind it, the four axes and the
 cold-read mode hold unchanged; the findings report to the requester replaces
 the ticket file as the address, and `hold-the-line`'s verdicts wait until a
 ticket set exists to receive them.
 
-Ticket text and code comments are **leads**. Current source, current artifacts
-and commands that run are evidence. A ticket that calls itself `resolved` is
-a claim, not a proof. The ticket under review normally reads `claimed`:
+Ticket text and code comments are **leads, not evidence** (`cold-read`); a
+ticket that calls itself `resolved` is a claim. The ticket under review
+normally reads `claimed`:
 `build-slice` leaves it that way on purpose, and this skill is what turns it
 `resolved` at the end.
 
 ## Fix the point first
 
-Pin the comparison before anything else: `git diff <fixed-point>...HEAD`.
-Cycle 1 pins the parent of the ticket's **first** build commit
-(`git log --reverse --oneline --grep 'ticket <NN>'`, oldest hit whose
-subject ends `(ticket NN)` and does not begin `REVIEW:`, which review
-commits own — "first", so a criterion repair later in history cannot shrink
-the diff to itself); cycle 2 and 3 pin the previous cycle's review
+With no ticket named, the target is the ticket of the newest build commit.
+
+Pin the comparison before anything else: `git diff <fixed-point>...HEAD`. Build
+commits are found with
+`git log --format='%h %s' | grep -E '\(ticket NN\)$' | grep -v ' REVIEW:'`,
+adding `--reverse` for the oldest hit — `REVIEW:` subjects are review commits
+and never build commits. Cycle 1 pins the parent of the ticket's **first**
+build commit ("first", so a criterion repair later in history cannot shrink the
+diff to itself); cycle 2 and 3 pin the previous cycle's review
 commit — every cycle leaves one, whichever way it closes; a re-review after
 REOPEN pins the parent of the reopen repair's build commit — the tickets that
 landed in between were reviewed by their own cycles, and their work is not
@@ -54,8 +59,7 @@ is the walking skeleton's normal case on greenfield.
 ## The four axes, read in parallel, reported apart
 
 Run each as its own reader, as a separate subagent that cannot see the others,
-and keep the reports apart. Four readers that cannot see each other produce four
-genuinely different reports; one reader wearing four hats produces one report
+and keep the reports apart: one reader wearing four hats produces one report
 four times. Do not merge or rerank across axes — merging is the judgement the
 separation exists to prevent.
 
@@ -63,18 +67,29 @@ When two axes land on the same finding, keep both entries and say they
 converged. Convergence is signal about the finding's weight, not duplication to
 clean up.
 
+**What every reader gets.** Each axis reader is its own subagent, handed: the
+fixed-point ref and `git diff <ref>...HEAD`, the ticket file's path, the repo as
+its working directory, its own axis paragraph below verbatim, and the
+instruction *"cold read; report `<file::symbol>: <label>: <problem>. <fix>.`
+lines only; edit nothing"*. Plus one extra input per axis:
+
+| axis | also gets |
+|---|---|
+| Seam | the ticket's `## Seam check` report, and `plumbline:seam-check` |
+| Ticket | the ticket file itself |
+| Bar | `${CLAUDE_PLUGIN_ROOT}/references/standing-bar.md` and the ticket's `## Bar` block |
+| Craft | the repo's documented standard, by path |
+
 **Seam.** Cold-read the `## Seam check, <date>` report that `build-slice` §5
 appended to the ticket, against current source: does anything read what this
 wrote; does anything write what it reads. Re-run `seam-check` only if the
 report is missing or the diff has touched the seam's producer or consumer
 since it was written — a criterion repair that changed tests and bookkeeping
 is not the seam moving, and closing's rule that the repair leaves the report
-standing wins. A re-run
-ordered here walks the greps and reads the recorded far ends only; live
-replays and the `REPLAYS` counts belong to `build-slice` §5's run alone —
-reading the recorded far ends against current source is this axis's
-counter-check. This axis goes first because it is the one that produced 64 % of
-the late tickets in the effort this workflow was built from.
+standing wins. A re-run ordered here reads the recorded far ends against
+current source; it never replays and never touches `REPLAYS` (`seam-check`).
+This axis goes first because it is the axis the measurement behind this flow
+found the defects in.
 
 **Ticket.** Against the ticket file: what did it ask for that is missing or
 partial; what is in the diff that it did not ask for; what looks implemented
@@ -86,12 +101,12 @@ way — a redeemed one (`…, written by 02`) opens the cited writer; one still
 reading `ticket NN` is checked like the forward form below. Check each
 `CONSUMED BY` by its form: for `<module::symbol>, reading <literal>`, open the
 symbol and find the literal — a symbol citation you cannot confirm in source
-is a `blocker`. For `operator, via <cmd>`, run the command and read the
-output. For `ticket NN`, confirm NN exists and is not `resolved` or
-`declined`. For `<name>, out of repo`, confirm the named contract check
-exists. If the `## Seam check` report records skipped grep hits (brownfield),
-open a sample of them. In testing, a citation reading "indirectly via the
-reason text" passed every other gate.
+is a `blocker`, and "indirectly via the reason text" is the form that
+passes every other gate. For `operator, via <cmd>`, run the command and read
+the output. For `ticket NN`, confirm NN exists and is not `resolved` or
+`declined`. For `<name>, out of repo`, confirm the named contract check exists.
+If the `## Seam check` report records skipped grep hits (brownfield), open a
+sample of them.
 
 **Bar.** Against `${CLAUDE_PLUGIN_ROOT}/references/standing-bar.md`, including
 the five ways a bar gets quietly lowered. Tightening is silent; loosening is
@@ -127,18 +142,15 @@ Label each: `blocker`, `required`, `nit`. One line each:
 <file::symbol>: <label>: <problem>. <the fix>.
 ```
 
-The label is not decoration. `hold-the-line` reads it: a `blocker` cannot become
-a deferred criterion, and a `nit` is fixed now or declined. Assign the label
-knowing that.
+The label is not decoration: `hold-the-line`'s severity table decides the
+verdict from it. Assign it knowing that.
 
 ## Every finding gets a verdict
 
 **Write the findings into the ticket when the four readers report** — before
-the verdicts, not after. Same argument as below, one step sharper: an
-unverdicted finding is indistinguishable from an open one, but a finding that
-exists only in this session's context is not indistinguishable, it is
-**invisible**. Four subagents that cannot see each other report into one
-context, and that context can end.
+the verdicts, not after. An unverdicted finding is indistinguishable from an
+open one; a finding that exists only in this session's context is
+**invisible**, and that context can end.
 
 The entries go under `## Review findings, <date> — cycle N`, in the format
 `hold-the-line` owns: axis tag in brackets, severity, then `— verdict pending`
@@ -152,16 +164,14 @@ Writing them early does not merge them. The axis tag keeps the four readers'
 entries apart in the ticket — the separation the readers were run under
 survives into the file or it was never real.
 
-Early means *after all four have reported*, never while one is still reading.
-`build-slice` forbids editing a ticket a cold read has open, for the reason that
-rule gives: a reader discards line-numbered findings when the artifact moves
-under it, and the Ticket axis reads this file.
+Early means *after all four have reported*, never while one is still reading:
+the Ticket axis has this file open, and `cold-read` discards its line-numbered
+findings if the file moves under it.
 
 Hand the findings to `hold-the-line` with their labels. Every finding comes
 back with exactly one of its six verdicts, written into the ticket that
-produced it. `hold-the-line` owns that set; do not shorten it from memory here,
-because a `blocker` reduced to a deferred criterion is the bar going down
-quietly.
+produced it. `hold-the-line` owns that set; do not shorten it from memory
+here.
 
 ## Closing the cycle
 
@@ -181,10 +191,9 @@ and this commit is the fixed point the next cycle pins.
   same commit — this is the one edit that writes that value.
 - If a criterion **was** added to this ticket, the commit carries the findings
   and verdicts, the ticket stays `claimed`, and it goes back to `build-slice`
-  (red test first, as always — and when the criterion adds a missing assertion
-  over behaviour that is already correct, the test is born green: then the
-  discrimination check is the proof — break the asserted literal, watch red,
-  restore, record it on the repair's `Mutated:` line). The repair runs
+  (red test first, as always; a criterion over behaviour that is already
+  correct is born green, and `build-slice` §2 says what proves it then). The
+  repair runs
   `build-slice` §2–§3 and §7 — a dated addition to `## Resolution` and a fresh
   `## Bar, <date>` paste — but not §5: the seam report stands and `REPLAYS`
   moves once per ticket. The repair lands as its own `(ticket NN)` build
@@ -198,14 +207,10 @@ returns here; the old count stays in the file as history.
 A cycle is one pass of all four axes, plus the verdicts and repairs that follow
 it. The re-review is the start of the next cycle, not the end of this one.
 
-The cycle line at the bottom of the findings block —
-`Review cycle 2 of 3 — undecided: seam 1, craft 2`, closing as
-`— undecided: none` once every verdict is in —
-is what survives the session boundary. A bound nobody writes down cannot
-survive one, and a count without its axes tells the next session how many
-cycles are left and nothing about what is unfinished inside this one. A fresh
-session can re-run an axis; what it cannot do is work out which axis produced
-a pending finding it never saw raised.
+The cycle line `hold-the-line`'s recording format ends each block with is what
+survives the session boundary. A bound nobody writes down cannot survive one,
+and a count without its axes leaves the next session unable to tell which axis
+raised a pending finding it never saw.
 
 Stop when the next cycle returns only findings already considered, **or** after
 three cycles, **or** when the user says ship it.
@@ -229,9 +234,9 @@ and say so.
 ## Approving
 
 Approve when the change improves the codebase **against the behaviour the
-ticket promised**, not against the previous commit. In testing a change that
+ticket promised**, not against the previous commit — measured, a change that
 plainly improved the code also silently sent every customer lookup to a public
-resolver — better than before, and wrong.
+resolver.
 
 Approve even when it is not how you would have written it. Perfect code does not exist and blocking on
 taste turns the review into another source of tickets.

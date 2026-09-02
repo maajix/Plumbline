@@ -13,10 +13,17 @@ component tickets, however loudly the ticket skill says "cut vertically".
 So organise it by **path**: a thing goes in one end and something observable
 comes out the other.
 
-Input is `shape.md`. Do not re-interview — synthesise what is already there,
-and read the current source of anything the feature touches. One exception:
-a successor effort's spec takes the closing effort's spec plus the moved
-tickets as its input instead — `close-effort` says when.
+Input is `docs/issues/<effort>/shape.md`; the output is
+`docs/issues/<effort>/spec.md`. Do not re-interview — synthesise what is
+already there, and read the current source of anything the feature touches. One
+exception: a successor effort's spec takes the closing effort's spec plus the
+moved tickets as its input instead — `close-effort` says when.
+
+With no effort named, it is the one under `docs/issues/` that has a `shape.md`
+and no `spec.md`, and whose
+`grep -c '^\*\*Status:\*\* unshaped' docs/issues/<effort>/shape.md` prints
+`0`. No number printed is not a `0`; a missing `shape.md` is the synthesis case
+above, not a candidate. If several qualify, list them and ask which.
 
 A `shape.md` carrying `**Status:** unshaped` is a stub shape, not spec
 input — it never had an interview. Run `shape-idea` on it first.
@@ -87,9 +94,8 @@ an `E<n>` here, quoting the bullet's words so the pairing is greppable, and
 the link is counted, not trusted:
 `grep -c '^- .*— must hold before close$' docs/issues/<effort>/shape.md`
 prints the number of tagged In scope bullets, and each one has an `E<n>`
-quoting it. That tag is the shape's only way to name an exit criterion
-before a spec exists — a line the shape wrote that this section did not read
-would be the same defect the Load section below exists for. A successor spec
+quoting it. That tag is the shape's only way to name an exit criterion before
+a spec exists (`shape-idea`). A successor spec
 written in synthesis mode has no `shape.md` and no count: the moved `E<n>`
 numbers are the whole check there.
 
@@ -109,11 +115,10 @@ ticket a bar line it can only assert.
 units: how many, how often, how big, how old. Then name, for each, what in the
 system has to survive it.
 
-This section exists because the shape's own answer got lost. In testing,
-`shape.md` recorded "peak ~20 run-reports per second", nothing downstream ever
-read it again, and the code shipped a single shared database connection that
-failed 20 out of 20 times at exactly that load. In this flow's own words:
-`shape.md` wrote a number, read by nobody.
+Measured: a `shape.md` recorded "peak ~20 run-reports per second", nothing
+downstream read it again, and the code shipped one shared database connection
+that failed 20 out of 20 times at that load — a number written by the shape and
+read by nobody.
 
 So this section has a named reader: `cut-slices` makes a ticket on a path with
 a Load figure quote that figure in its `## Why` block, and the standing bar's
@@ -126,9 +131,8 @@ reads would be the same defect, moved one file to the right.
 stale path in a spec is read as fact. Name types and behaviours; let the
 builder find the file.
 
-The verify command is the first of two exceptions, and it is exempt for the
-same reason the rule exists: a stale path is read as fact, while a stale
-command fails the moment someone runs it. It earns its place by being run, not by being read.
+The verify command is the first of two exceptions: a stale command fails the
+moment someone runs it, where a stale path is read as fact.
 
 `docs/issues/` addresses carried from the shape's `split off:` bullets are
 the second: they are the flow's own bookkeeping, and `close-effort`'s
@@ -141,7 +145,9 @@ the author remembers it is the most expensive kind of wrong.
 
 ## Before handing it over
 
-Run `cold-read` over the finished spec. Then answer, in writing:
+Run `cold-read` in a fresh subagent that receives only the artifact path(s) and
+the repo, never this session's context; work its findings in afterwards. Then
+answer, in writing:
 
 > Can every path in section one be cut into tickets that each leave something
 > running?
@@ -153,4 +159,5 @@ one line of work, rather than in the tickets, where it is ten.
 
 End your final message by naming it: **stay in this session** and run
 `/plumbline:slice <effort>` — the spec's paths are still in context, and the
-cold read above already bought the fresh-eyes pass a new session would buy.
+cold read above ran in its own subagent, so the fresh-eyes pass is already
+bought.

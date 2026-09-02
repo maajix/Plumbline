@@ -17,19 +17,17 @@ only where their judgement is the answer.
 ## Before the first question
 
 A **stub shape** is a sub-problem an earlier interview split off, parked as
-`docs/issues/<its-slug>/shape.md` — "A sub-problem is not a bucket" below
-defines it and owns the rationale for the two greps quoted here. Run both
-before the first question.
+`docs/issues/<its-slug>/shape.md`; "A sub-problem is not a bucket" below defines
+it and owns the Status grep. Run both greps before the first question, and read
+a grep error as "looked in the wrong place", never as "none".
 
 `grep -rn --include=shape.md '^\*\*Discovered while shaping:\*\*' docs/issues/`
-walks every split end ever written, shaped or not. Read each line back
-against the `shape.md` of the effort it names: each end must name the other,
-and a missing shape end takes the `— split off: docs/issues/<its-slug>/`
-bullet form. The repair lands in this edit — into the stub's own file when
-the named effort already carries a `## Close,` block, because nothing reads
-a closed effort's shape again. No output means no split was ever recorded; a
-grep error means the folder is missing or unreadable — go look, never read
-it as empty.
+walks every split end ever written, shaped or not. Read each line back against
+the `shape.md` of the effort it names: each end must name the other, and a
+missing shape end takes the `— split off: docs/issues/<its-slug>/` bullet form.
+The repair lands in this edit — into the stub's own file when the named effort
+already carries a `## Close,` block, because nothing reads a closed effort's
+shape again.
 
 `grep -rn --include=shape.md '^\*\*Status:\*\* unshaped' docs/issues/` says
 which of those ends still wait. If the idea being shaped matches a waiting
@@ -37,9 +35,8 @@ stub, that stub's folder is the effort, and its `**Why it exists:**` and
 `**What is known:**` lines are the interview's opening input — beliefs to
 state, not questions to re-ask. The finished `shape.md` replaces the stub in
 the same folder and keeps every `**Discovered while shaping:**` line
-verbatim — the first grep above is what still finds them after retirement —
-so the replacement leaves the Status grep without cutting an end. If the
-idea matches no stub, name the waiting ones in a single line and move on —
+verbatim, so the replacement leaves the Status grep without cutting an end. If
+the idea matches no stub, name the waiting ones in a single line and move on —
 a stub nobody restates is how a discovery rots.
 
 ## The three buckets
@@ -53,14 +50,13 @@ Every question that arises in this phase goes into exactly one:
 | **Craft** | the agent | research, a prototype, or the walking skeleton |
 
 A number with consequences the user owns is **Product**, not Craft, even when it
-looks technical. "What weight does a cached read carry?" and "how long do we
-keep this?" set what the product does and what it costs. The guardrail below is
-about how something is built, never about what it is worth.
+looks technical: "how long do we keep this?" sets what the product does and what
+it costs. The guardrail below is about how something is built, never about what
+it is worth.
 
-The third bucket is the one usually missing, and its absence is why interviews
-drift downward: an implementation choice is not a look-uppable fact, so with
-only two buckets it falls to the user by default. It belongs to **Craft**.
-Park it and keep asking at altitude.
+Craft is the bucket usually missing, and its absence is why interviews drift
+downward: an implementation choice is not a look-uppable fact, so with only two
+buckets it falls to the user by default. Park it and keep asking at altitude.
 
 ## What to ask
 
@@ -115,13 +111,13 @@ not Product, Fact or Craft — it is a different effort trying to be born in the
 wrong interview.
 
 Write it into `interview.md` the moment it appears, with the user's words that
-raised it — the running record is what survives a session that dies
-mid-interview. Mint it when the interview ends, whichever way it ends — the
-three-round too-big split included. Not as a ticket: tickets belong to
-efforts, and this one has no spec to cut from. It becomes a **stub shape**
-at `docs/issues/<its-slug>/shape.md`, where `<its-slug>` is the kebab-case
-name of the problem — the same convention as `<effort>`, the shaping
-effort's own slug. It holds only what this interview actually established:
+raised it — that running record survives a session that dies mid-interview.
+Mint it when the interview ends, whichever way it ends, the three-round too-big
+split included. Not as a ticket: tickets belong to efforts, and this one has no
+spec to cut from. It becomes a **stub shape** at
+`docs/issues/<its-slug>/shape.md`, `<its-slug>` being the problem's kebab-case
+name, the same convention as `<effort>`. It holds only what this interview
+actually established:
 
 ```markdown
 # <Problem> — stub shape
@@ -171,10 +167,9 @@ questions and your predicted answers into `interview.md`, then state the
 predictions to the user as beliefs (per "State beliefs, don't queue
 questions") in the message that ends the last round. Confirmed predictions end
 the interview; a corrected one means the shape was not done — work the
-correction in before stopping. A prediction you were unwilling to write down
-was not a prediction. It is not "every branch visited" and not "nothing
-left assumed" — those bounds have no floor, so they drive the interview down
-into implementation.
+correction in before stopping. The bound is deliberately not "every branch
+visited" or "nothing left assumed": those have no floor and drive the interview
+down into implementation.
 
 **Three rounds.** A round is one pass over the headings in "What to ask",
 asked one question at a time, and it ends when you state your current beliefs
@@ -197,8 +192,7 @@ appended line.
 
 `interview.md` is the raw exchange, by round: the questions asked, the answers
 given, the vague words chased, and the three predicted answers that ended it.
-It is the evidence for every quote in the shape; without it the user's own
-words are reconstructed from memory a session later.
+It is the evidence for every quote in the shape.
 
 `shape.md` is the summary below, and it is what everything downstream reads.
 
@@ -228,8 +222,9 @@ verbatim, one line per discoverer>
 - <unknown> — RESEARCH | PROTOTYPE | SKELETON WILL SHOW
 ```
 
-**Under 600 words.** Longer means the effort is too big — split it before
-specifying. The number is there so it can be checked; "one page" cannot.
+**Under 600 words**, checked: `wc -w docs/issues/<effort>/shape.md`. Longer
+means the effort is too big — split it before specifying. The number is there
+so it can be checked; "one page" cannot.
 
 The Open Questions are agent work and the user never sees them again as
 questions. They are answered **before or inside** the walking skeleton, never as

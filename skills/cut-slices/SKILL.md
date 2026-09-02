@@ -8,17 +8,9 @@ user-invocable: false
 
 A ticket that finishes leaves something **running**, not something *built*.
 
-This exists because of a measurement. In one effort, tickets 1-60 were
-component-shaped. Of tickets 111-165, **64 % were seam defects**:
-`a-queued-job-is-read-by-nothing`,
-`the-result-store-is-connected-at-neither-end`,
-`fifty-templates-and-not-one-has-ever-been-selected`.
-
-Every one of those components was built correctly. Each ticket named one end of
-an interface, nobody ran both ends together, and the defects all arrived on the
-first real run — 35 seam defects across 55 tickets.
-
-The agent did not make gross mistakes. **The ticket contained half a seam.**
+Measured: of one effort's tickets 111-165, 64 % were seam defects, every
+component built correctly and every ticket carrying half a seam
+(`${CLAUDE_PLUGIN_ROOT}/docs/DIAGNOSIS.md`).
 
 ## Rule 1 — The first ticket built is a walking skeleton
 
@@ -34,8 +26,7 @@ State it as a sentence before cutting anything else:
 > A hostname in a text file goes in at the front, and a line in the operator's
 > `queue` output comes out at the back.
 
-If that sentence cannot be written, the effort is not understood well enough to
-cut. Go back to the spec.
+If that sentence cannot be written, go back to the spec.
 
 A walking skeleton is not a prototype and not a spike. It is production code
 that does one trivial thing correctly through the whole stack, and it stays.
@@ -48,30 +39,25 @@ measurement showing today's behaviour.
 
 **Rule 1 outranks Rule 4.** The skeleton crosses as many files and seams as the
 path needs, and the size ceiling does not apply to it. Nothing else in an effort
-gets that exemption. Shaping the architecture to fit a ticket-size rule is the
-rule steering the design, which is backwards.
+gets that exemption; shaping the architecture to fit a ticket-size rule is the
+rule steering the design.
 
 Two things follow from that exemption.
 
 **The skeleton is the effort's likeliest handoff.** It is the one ticket the
-size ceiling was never applied to, and it is the first one built, so it is the
-one most likely to outlast the session that claims it. That is not a reason to
-shrink it — it is a reason to expect the handoff. `build-slice` says what to
-leave in the ticket when a session ends first.
+size ceiling was never applied to, and the first one built. That is not a
+reason to shrink it — it is a reason to expect the handoff, which `build-slice`
+covers.
 
 **The skeleton leaves behind the effort's verify command.** It is the first
-ticket that meets the real toolchain — it has to, to run through every layer for
-real — so it is the ticket that learns the one command that runs this effort's
-tests from a clean checkout. Write that command into the spec's
-`## Verify command` section, and pick a form that **prints the name of each
-test it ran** (`pytest -v`, not `-q`): the standing bar reads a named test in
-that output, and a quiet runner defeats the line. Every later ticket's bar
-then has something to execute where it otherwise only asserts.
+ticket that meets the real toolchain, so it is the ticket that learns the one
+command that runs this effort's tests from a clean checkout. Write it into the
+spec under `## Verify command`, in the form `write-spec` requires there — it
+prints each test's name, because every later ticket's bar reads its own test by
+name in that output.
 
 That command is not a second seam, not a fourth production file, and not a
-criterion of its own: Rules 3, 3b and 4 are untouched by it. It is one line of
-spec recording what the skeleton already ran. No plugin ships it, because only
-this effort knows its toolchain.
+criterion of its own: Rules 3, 3b and 4 are untouched by it.
 
 ## Rule 2 — Every ticket names its seam
 
@@ -88,7 +74,7 @@ A ticket that produces more than one value carries one `PRODUCES` /
 the operator something (`operator, via <cmd>`) *and* leaves a structure a
 later ticket reads (`ticket NN`) — that is two pairs, not a choice between
 them. A slice that ends at a person always carries its `operator, via <cmd>`
-pair; that last hop is what the feature exists for.
+pair.
 
 ### PRODUCES has a kind, and the kind is the point
 
@@ -100,10 +86,10 @@ pair; that last hop is what the feature exists for.
 | `nothing` | this ticket writes nothing that anything else reads |
 
 `changed` and `contract` are the two that get missed. A ticket that rewrites a
-policy so a column holds a different number produces no new column and is the
-most dangerous kind of seam change there is — it is `seam-check`'s own unit
-drift, arriving through a field that looks unchanged. A ticket that stops an
-existing call from raising has changed a contract without adding a value.
+policy so a column holds a different number adds no column and is `seam-check`'s
+own unit drift, arriving through a field that looks unchanged. A ticket that
+stops an existing call from raising has changed a contract without adding a
+value.
 
 ### CONSUMED BY takes one of five forms
 
@@ -115,21 +101,18 @@ existing call from raising has changed a contract without adding a value.
 | `<name>, out of repo` | another codebase reads it | name the contract and how it is checked |
 | `nothing` | `PRODUCES` is `nothing` | no seam test is owed; Rule 3 asks for a behaviour test instead |
 
-`seam-check` records one extra far-end form — `the <constraint> at <where>`
-— discovered at check time; it is a finding of the pass, never a cut-time
-citation, which is why this table does not carry it.
+`seam-check` records one extra far-end form — `the <constraint> at <where>` —
+discovered at check time, never a cut-time citation, which is why this table
+does not carry it.
 
-**Cite the symbol, not the line.** `cli.py::cmd_queue`, not `cli.py:43`. This
-skill says below that numbers are addresses nothing catches when they go stale,
-and a line number is exactly that: in testing, the skeleton's citations were
-eight lines wrong the moment the next ticket inserted a guard above them. A
-symbol name survives an edit; a line number does not.
+**Cite the symbol, not the line.** `cli.py::cmd_queue`, not `cli.py:43`. A
+symbol name survives an insert above it; a line number goes stale and nothing
+catches it.
 
 **Name the literal the reader reads.** The symbol alone stops discriminating
 after the first ticket: once one reader exists, every following ticket names
-the same one, and the field says nothing the title did not. The literal is the
-greppable token `PRODUCES` introduced — the column, the key, the field, the
-event string:
+the same one. The literal is the greppable token `PRODUCES` introduced — the
+column, the key, the field, the event string:
 
 ```
 01  cli.py::cmd_queue, reading observation.status
@@ -146,10 +129,9 @@ reader consumes has to write a visibly different line.
 sentence passes a check it should fail. If the consumer only exists after
 another ticket, the honest form is `ticket NN`, not a file path.
 
-The human form is not a loophole. **Every vertical slice ends at a person** —
-that last hop is what the feature exists for, and it is the one hop a file
-citation cannot express. It earns the same proof as any other seam: the ticket
-asserts on what the operator actually sees.
+The human form is not a loophole. **Every vertical slice ends at a person**,
+and it earns the same proof as any other seam: the ticket asserts on what the
+operator actually sees.
 
 ## Rule 3 — The proof test crosses the seam
 
@@ -175,16 +157,14 @@ end. One test may carry both assertions; a value no assertion looks at is half
 a seam wearing a green test.
 
 **Prove the test discriminates.** Change the reader's literal — the status
-string, the column name, the key — and watch the test go red. A seam test you
-have not tried to break is a claim, not a check. `build-slice` §2 schedules
-this at build time, and the ticket's `## Resolution` records what was mutated
-and what went red — a discrimination check nobody wrote down was not run.
+string, the column name, the key — and watch the test go red. `build-slice` §2
+schedules this at build time, and the ticket's `## Resolution` records what was
+mutated and what went red — a discrimination check nobody wrote down was not
+run.
 
-Write it so it stays sensitive across ticket boundaries. In testing, a later
-ticket changed a policy from integer to float; the ticket's own test passed
-because `50.0 == 50`, and the **previous** ticket's seam test caught it, because
-it asserted the number appeared in the sentence the operator reads. That is the
-rule earning its keep, and it only works if the assertion looks at the far end.
+Write it so it stays sensitive across ticket boundaries: only an assertion at
+the far end catches a later ticket that turns the value into a float its own
+test accepts as equal.
 
 The test is a third end of the seam. When a later ticket widens a producer, an
 earlier ticket's seam test is the thing that goes red — that is the design
@@ -194,12 +174,10 @@ working, not a brittle test to be relaxed.
 
 A seam test reaches the seam by replacing the outside world with a double: an
 injected resolver, a fake clock, a stub client. That double is where the seam
-test stops and where correctness bugs live.
-
-This is not hypothetical. In testing, a scanner passed four green seam tests, a
-clean seam check, a walked standing bar and a live run — and reported **zero
-findings on a list full of real ones**, because the adapter behind the injected
-port asked the wrong DNS question. Every gate in this flow was green.
+test stops and where correctness bugs live. Measured: a scanner cleared every
+gate in this flow green and reported zero findings on a list full of real ones,
+because the adapter behind its injected port asked the wrong question of the
+real world.
 
 So any ticket that injects a double carries a second criterion:
 
@@ -216,15 +194,9 @@ If nothing can check it yet, write the deferral in the debt form Rule 5 walks �
 and write it **ticked**:
 `- [x] **The real thing is checked too.** deferred to ticket NN`. The tick is
 honest because the redemption grep guards the debt, not the checkbox; an
-unticked deferral would fail the standing bar's first line on every
-legitimate deferral. The session that lands NN redeems it like any forward
-reference, and the close walks it. An
-unchecked double is the failure mode this flow is otherwise blind to, so it is
-named, not assumed.
-
-**Why this exists:** the measurement behind this skill says component tests miss
-wiring. It does not say wiring tests catch correctness. Both are needed, and
-only one of them is fashionable.
+unticked deferral would fail the standing bar's first line on every legitimate
+deferral. The session that lands NN redeems it like any forward reference, and
+the close walks it.
 
 ## Rule 4 — One agent session, one seam
 
@@ -236,8 +208,7 @@ Because nothing measures it, a session that runs out mid-ticket is not a signal
 that the cut was wrong. **Hand off, do not re-plan.** `build-slice` writes the
 handoff and the next session picks the ticket up where it stands; re-cutting in
 flight throws away the red test that is already running. Re-cutting has one
-place, and it is `hold-the-line`'s criteria count after the review, not a
-judgement made by whichever session happened to run short.
+place, and it is `hold-the-line`'s criteria count after the review.
 
 Ceiling: **one seam, three production files, one migration.** Two seams means
 two tickets. The walking skeleton is exempt (Rule 1).
@@ -272,24 +243,20 @@ It carries three obligations:
   `declined`.
 - **The session that lands NN redeems the line.** After NN's seam test is
   green, that same session rewrites the earlier ticket's `CONSUMED BY` from
-  `ticket NN` into the real citation, symbol and literal. The debt is paid by
-  the ticket that pays it, not by a walk months later.
+  `ticket NN` into the real citation, symbol and literal.
 - **No forward reference outlives its effort.** At close, every remaining
   `ticket NN` line takes one of three endings: redeemed, deleted together with
   the value nothing reads, or moved to the successor effort **with both ends
   together**. Splitting the two ends across two efforts is the defect this flow
-  exists to prevent, arriving on schedule.
+  exists to prevent.
 
-A forward reference with an address is a plan. One without is how 35 tickets
-got filed at once.
+A forward reference with an address is a plan.
 
 ## Rule 6 — An effort has a ticket ceiling
 
 Hard ceiling: **25 tickets.** At 25, stop and split into a second effort with
-its own spec and its own walking skeleton.
-
-An effort of 165 tickets is not an effort. It is a program that was never
-allowed to close, and no human can hold its state.
+its own spec and its own walking skeleton. No human holds the state of an
+effort that was never allowed to close.
 
 ## Ticket template
 
@@ -338,19 +305,32 @@ delete it, never leave it standing in a cut ticket.
 
 `Status` takes exactly these values, and every skill in this flow uses the same
 set: `open`, `claimed`, `resolved`, `blocked — needs decision`, `declined`.
+
+`<date>` is ISO 8601 `YYYY-MM-DD` in every heading of this flow — `## Seam
+check`, `## Resolution`, `## Bar`, `## Handoff`, `## Review findings`,
+`## Build findings`, `## Close`. Later sessions copy the form already on disk,
+so the first heading written decides it.
+
 `Touches` is a lead, not a promise: `build-slice` §1 corrects it against
 source, and the standing bar compares the actual diff against the corrected
 line.
 
 ## Numbers are addresses
 
-Never renumber. Split `14` into `14a`, `14b` — the old file stays in place
-with `**Status:** declined` and the reason `split into 14a, 14b`, and the
-splitting session rewrites every `CONSUMED BY: ticket 14` line **and** every
-`Blocked by` entry naming `14` to the half that owns it, in the same edit
-(`hold-the-line` carries the full split procedure). In-code
-comments and other tickets point at numbers, the pointers are not compiled,
-and nothing catches a stale one.
+Ticket numbers are **two digits with a leading zero** — `01`, not `1` — and the
+build commit's `(ticket NN)` suffix carries the same two digits. Splits are
+`14a`, `14b`, sorting `14 < 14a < 14b < 15`.
+
+Never renumber; split instead, by the procedure `hold-the-line` owns. In-code
+comments and other tickets point at numbers, the pointers are not compiled, and
+nothing catches a stale one.
+
+Tickets are files: `docs/issues/<effort>/NN-<slug>.md`, one file per ticket,
+beside `shape.md` and `spec.md` in the effort folder itself — there is no
+second `issues/` level. Number them **in dependency order**, from the next free
+number in the folder (`01` in a fresh effort). With no effort named, it is the
+one under `docs/issues/` that has a `spec.md` and no `NN-*.md` tickets yet; if
+several qualify, list them and ask which.
 
 Numbers are unique inside one effort, not across efforts. A ticket moved into a
 successor effort keeps its number, and the successor's walking skeleton takes
@@ -359,8 +339,9 @@ in an effort; it does not have to be the lowest number.
 
 ## Before you hand the plan over
 
-Run `cold-read` on the finished set. Then answer in writing, in `spec.md`
-under `## Plan check`:
+Run `cold-read` in a fresh subagent that receives only the artifact path(s) and
+the repo, never this session's context; work its findings in afterwards. Then
+answer in writing, in `spec.md` under `## Plan check`:
 
 > If every ticket is implemented exactly as written and nothing more, does the
 > feature run end to end?
@@ -369,9 +350,9 @@ An answer needing "well, then we would also need to…" names a seam nobody owns
 Add it now, not after the first real run.
 
 The plan is files, and files ride commits: the effort's planning artifacts —
-spec, tickets, the folder — go in with the walking skeleton's build commit
-(`build-slice` §8). Nothing in this flow commits them earlier, and the
-standing bar's diff line expects them there.
+spec, tickets, the folder, including stub shapes minted while shaping — go in
+with the walking skeleton's build commit (`build-slice` §8). Nothing in this
+flow commits them earlier, and the standing bar's diff line expects them there.
 
 The plan is cut before the skeleton runs, and the spec says the skeleton will
 settle its open questions — so when the skeleton lands, re-read the remaining

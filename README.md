@@ -168,6 +168,35 @@ That is the whole flow. Three things worth knowing while it runs:
 - **New work found mid-flight goes through `/verdict`, never straight into a new
   ticket file.** That gate is the one thing keeping the backlog from growing
   once per finished ticket.
+- **The review runs in a fresh session.** `build-slice` ends by saying so: the
+  ticket file carries the state, and a builder's context should not grade its
+  own verdicts.
+
+## The commit guard
+
+The plugin ships one hook: a `PreToolUse` guard on the Bash tool that blocks a
+`git commit` when the state under `docs/issues/` contradicts a rule the flow
+already carries. All four checks are greps over that folder — the hook knows
+nothing about your toolchain.
+
+| Blocked when | The rule it enforces |
+|---|---|
+| a changed ticket file still carries a `— verdict pending` entry | every finding gets a verdict before the commit |
+| a ticket adds a `## Bar,` heading while a criterion is unticked, a `## Handoff` stands, or no `## Resolution` exists | the standing bar's per-ticket lines 1 and 6 |
+| `**Status:** resolved` is added outside a review commit | only a closing review cycle writes that value |
+| a spec gains `## Close,` while a ticket in its folder is neither `resolved` nor `declined` | the close walk over ticket statuses |
+
+It sees only the commits Claude makes through the Bash tool, and it compares
+the working tree against `HEAD` rather than the index, because
+`git add -A && git commit` stages inside the same call. Fenced blocks are
+stripped before anything is read, so pasted command output and template
+examples never read as live state, and a merge, rebase, cherry-pick or revert
+in progress is skipped entirely. Any internal error exits 0 — a bug in the hook
+must not block a commit.
+
+To switch it off, disable this plugin's hooks in your settings, or commit
+outside the session. The check that proves it works:
+`bash hooks/guard-commit.test.sh`.
 
 ## The four rules
 
@@ -236,8 +265,8 @@ verified.
 A seam test proves two ends talk. It never proves they tell the truth — which is
 why `cut-slices` rule 3b makes the ticket name what checks the real thing.
 
-Full report, residual risks and what is still unmeasured:
-[`docs/VALIDATION.md`](docs/VALIDATION.md).
+What is measured, what is not, and the residual risk:
+[`docs/VALIDATION.md#stand-heute`](docs/VALIDATION.md#stand-heute).
 
 ## Credits and prior art
 

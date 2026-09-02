@@ -6,11 +6,17 @@ user-invocable: false
 
 # Close the effort
 
-Nothing else in this flow owns the effort as a whole. Each ticket closes itself,
-and an effort that no step ever ends is how one reaches 165 tickets.
+Nothing else in this flow owns the effort as a whole, and an effort no step ever
+ends is how one reaches 165 tickets.
 
 An effort closes when every debt it opened is settled. Debts, not tickets — the
 count going to zero is not the same as the work being finished.
+
+## Which effort
+
+With no effort named, it is the one under `docs/issues/` whose `spec.md` has no
+`## Close,` block — the comma matters: `## Close refused,` records a refusal and
+leaves the effort open. If several qualify, list them and ask which.
 
 ## The four walks
 
@@ -29,12 +35,10 @@ An uncommitted close is swept into the next diff and read as its work.
 ### 1. Forward references
 
 Run `grep -rn 'ticket [0-9]' docs/issues/<effort>/` and read every
-`CONSUMED BY`, `CONSUMES` and `deferred to` hit — the pattern matches through the
-template's bold markers, where a literal `CONSUMED BY: ticket` never would.
-Only hits in a ticket's seam-field head are debts; hits inside dated `##`
-blocks (`## Bar` pastes, findings entries, resolution records) are history
-and stay as they are. Most debt lines should already be gone: `build-slice` §5 redeems each one in the
-session that lands NN. What is left is what nobody paid.
+`CONSUMED BY`, `CONSUMES` and `deferred to` hit. **Only hits in a seam-field
+head are debts**; hits inside dated `##` blocks are history and stay as they
+are. Most debt lines should already be gone — `build-slice` §5 redeems each one
+in the session that lands NN. What is left is what nobody paid.
 
 Each remaining line takes exactly one of three endings, and the ending is
 written down:
@@ -56,13 +60,12 @@ Every `E<n>` in the spec. Each is either met, or moved out into a named
 successor effort in the same edit.
 
 Check it from the tickets: each names the criterion it serves. A criterion no
-ticket names is work nobody did. And check the set is complete against the
-shape: `grep -c '^- .*— must hold before close$' docs/issues/<effort>/shape.md`
+ticket names is work nobody did. Then check the set against the shape's tag
+(`shape-idea` defines it):
+`grep -c '^- .*— must hold before close$' docs/issues/<effort>/shape.md`
 prints the number of tagged In scope bullets, and each has its `E<n>` — met
-here or moved out, never lost between shape and spec. A successor effort
-built in synthesis mode has no `shape.md` and no count: its criteria came in
-with the moved tickets, keeping their `E<n>` numbers, and the numbers are
-the check.
+here or moved out. A successor effort built in synthesis mode has no
+`shape.md` and no count: the moved `E<n>` numbers are the check.
 
 ### 3. Ticket statuses
 
@@ -70,12 +73,11 @@ Every ticket is `resolved` or `declined`. Anything `open`, `claimed`, or
 `blocked — needs decision` either gets finished now or moves into the successor
 effort's folder, keeping its number and its status.
 
-Also run `grep -rn '— verdict pending' docs/issues/<effort>/` (the em-dash
-entry marker; cycle lines say `undecided` and cannot match) and read each
-hit: an entry line — `- [axis] **…** — verdict pending` — is a review whose
+Also run `grep -rn '— verdict pending' docs/issues/<effort>/` and read each
+hit. An entry line — `- [axis] **…** — verdict pending` — is a review whose
 verdicts never came in, on a ticket that therefore never legally became
-`resolved`; a hit that merely quotes the marker inside a pasted command or a
-close record is history. There must be no entry-line hit.
+`resolved`; a hit quoting the marker inside a paste is history, and a cycle
+line says `undecided` and cannot match. There must be no entry-line hit.
 
 Numbers are unique inside an effort, not across efforts, so a moved ticket does
 not get renumbered. The successor's walking skeleton takes the next free number
@@ -88,8 +90,7 @@ Run the feature end to end, the way an operator would, using every block in
 the `live, <reason>` blocks included; their reason exempts them from
 promotion, not from this walk. Read the far end.
 
-Not the test suite — the feature. Every measured failure behind this flow was
-green when it shipped.
+Not the test suite — the feature.
 
 The blocks marked `promoted to <test>` are carried by the suite, so they are not
 replayed here — and this walk does not replace the suite any more than the suite
@@ -122,7 +123,7 @@ lives, in this edit, or hand it to `hold-the-line` as a finding — those are
 the two endings, and a shrug is neither.
 
 Then run
-`grep -rln '^\*\*Discovered while shaping:\*\* <effort>,' docs/issues/` — the
+`grep -rl '^\*\*Discovered while shaping:\*\* <effort>,' docs/issues/` — the
 trailing comma keeps `export` from also matching `export-audit` — and check
 each hit's `**Status:**` line: the still-`unshaped` hits are stubs this
 effort minted that nobody picked up. Name them in the close block — not
@@ -138,31 +139,25 @@ folder with its own spec and its own walking skeleton, and finish this one at
 what is done. The successor's `spec.md` is written in the same edit, by
 `write-spec` in synthesis mode: its input is this effort's spec plus the moved
 tickets, not a new interview, and its exit criteria are the ones moved out
-here, **keeping their `E<n>` numbers** — the moved tickets' `Serves exit
-criterion` fields point at those numbers, and numbers are addresses here as
-everywhere in this flow. An effort that cannot close is a program, and a
-program has no end that anyone can see.
+here, **keeping their `E<n>` numbers**, which the moved tickets' `Serves exit
+criterion` fields point at.
 
-Walk 1 still runs, and it is the walk that makes an early close safe. Every
-forward reference is redeemed, deleted, or moved **with both of its ends**. A
-producer left behind in the closed effort while its reader moves on is how the
-debt survives the close that was supposed to settle it.
+Walk 1 still runs, and it is what makes an early close safe: a producer left
+behind while its reader moves on is how the debt survives the close that was
+supposed to settle it.
 
 The same applies when the shape of the work has changed enough that the spec no
 longer describes it. Close, and write the spec that does.
 
 ## Paths are addresses too
 
-The closed effort's folder stays where it is. `cut-slices` forbids renumbering
-for exactly one reason: in-code comments and other tickets point at the number,
-the pointers are not compiled, and nothing catches a stale one. A folder path is
-the same kind of address. Moving it breaks the same pointers just as quietly,
-and it does so at the one moment the effort that would have caught them stops
-existing.
+The closed effort's folder stays where it is. A folder path is an address like a
+ticket number (`cut-slices` "Numbers are addresses"): moving it breaks the same
+uncompiled pointers, at the one moment the effort that would have caught them
+stops existing.
 
 The `## Close, <date>` block is the status. No archive folder, no index, no
-summary file — the four walks already wrote everything a reader needs, into the
-file that reader opens anyway.
+summary file — the four walks already wrote everything a reader needs.
 
 If a repo does archive its closed efforts, then an archive move has two ends
 like every other move in this skill. Grep the whole repo for the old folder path

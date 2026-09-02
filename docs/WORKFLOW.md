@@ -36,6 +36,37 @@ trägt und kein Kriterium auf dieses Ticket kam, schreibt `review-pass` im
 selben Commit das `resolved`. REOPEN hängt später einen zweiten datierten
 `## Resolution`-Block an; der letzte ist der gültige.
 
+Die Review läuft in einer **frischen Session** — `build-slice` endet damit,
+sie zu nennen. Die Ticketdatei trägt den Zustand, und der Kontext, der gebaut
+hat, soll die eigenen Verdikte nicht bewerten. Die vier Achsen laufen in jedem
+Fall als Subagenten.
+
+## Der Commit-Guard, seit 0.6.0
+
+Das Plugin bringt einen Hook mit: `PreToolUse` auf das Bash-Tool, der einen
+`git commit` blockiert, wenn der Zustand unter `docs/issues/` einer Regel des
+Flows widerspricht. Vier Prüfungen, alle reine Greps über diesen Ordner:
+
+- ein noch offenes `— verdict pending` in einer geänderten Ticketdatei,
+- ein hinzugefügtes `## Bar,`-Heading, während ein Kriterium unangehakt ist,
+  ein `## Handoff` steht oder `## Resolution` fehlt,
+- ein `**Status:** resolved` außerhalb eines Review-Commits,
+- ein `## Close,` in der `spec.md`, während im Ordner ein Ticket weder
+  `resolved` noch `declined` ist.
+
+Der Hook vergleicht den **Arbeitsbaum** mit `HEAD`, nicht den Index:
+`git add -A && git commit` staged innerhalb desselben Bash-Aufrufs, zur
+Hook-Zeit wäre `--cached` leer. Er sieht nur Commits, die Claude über das
+Bash-Tool macht. Code-Fences werden vor jeder Prüfung entfernt, damit gepastete
+Kommando-Ausgaben und Template-Beispiele nicht als lebender Zustand gelesen
+werden; ein laufender Merge, Rebase, Cherry-pick oder Revert wird übersprungen. Jeder interne Fehler endet mit Exit 0 — ein Fehler im Hook
+darf keinen Commit blockieren. Abschalten: Plugin-Hooks in den Settings
+deaktivieren oder außerhalb der Session committen. Geprüft von
+`hooks/guard-commit.test.sh`, 30 Fälle.
+
+Die restlichen Regeln des Flows brauchen die Toolchain des Zielrepos und
+bleiben deshalb bei den Skills — das Plugin kennt sie nicht.
+
 ## Die drei gebündelten Basis-Skills
 
 Seit 0.3.0 liefert das Plugin sie mit — als eigene Skills unter `skills/`,

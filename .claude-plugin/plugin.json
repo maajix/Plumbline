@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "plumbline",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "Idea to shipped feature without backlog explosion. Vertical slices, seam proofs, and a hard gate on new tickets.",
   "author": {
     "name": "majix"

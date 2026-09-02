@@ -5,10 +5,9 @@ description: Cold-reads an artifact before calling it ready. Use before handing 
 
 # Cold read
 
-Authoring and reviewing in one pass does not work. Editing section by section is
-exactly what makes a contradiction between two sections invisible: you see the
-paragraph you are changing, never the one three pages up that now disagrees with
-it.
+Authoring and reviewing in one pass does not work: editing section by section is
+what makes a contradiction between two sections invisible — you see the
+paragraph you are changing, never the one three pages up that now disagrees.
 
 A **cold read** is one pass over the finished artifact, whole, top to bottom, as
 if you had never seen it — no memory of what a paragraph was *meant* to say,

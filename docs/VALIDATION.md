@@ -1,5 +1,36 @@
 # VALIDATION — adversarial review of plumbline
 
+## Stand heute
+
+**Real gelaufen: drei Läufe.** Ein voller Kettenlauf in einem Wegwerf-Repo —
+roter Test, Mutationsschritt, Seam-Check, Live-Replays, Verdikte bis
+`resolved`, und ein Close, der korrekt verweigert wurde, weil ein Ticket noch
+offen war. Ein zweiter Lauf gegen die Sessiongrenze: Tod mitten im Build,
+Handoff, Resume, eine gestorbene Review, ein echter `REOPEN`. Ein dritter Lauf
+im vorgeschriebenen Review-Modus: vier parallele Achsen-Subagenten, die
+einander nicht sehen. Kein Blocker in keinem Lauf. Dazu eine unabhängige
+Multi-Agenten-Review über sieben Leseachsen, adversarial nachgeprüft.
+
+**Ungemessen bleibt:**
+
+- **Brownfield.** Jeder Lauf war greenfield. Die Regeln für bestehenden Code
+  (Rule 1 „On existing code“, die übersprungenen Grep-Treffer in `seam-check`)
+  sind geschrieben, nicht gefahren.
+- **Der Nachfolge-Effort über die Ordnergrenze.** Verschobene Tickets,
+  Synthese-Spec, mitgezogene `E<n>`-Nummern: nie durchgespielt.
+- **Jede Fix-Welle nach dem Schreiben.** Die Läufe prüfen den Text, den sie
+  gefahren haben, nicht die Korrekturen, die sie ausgelöst haben. Das gilt für
+  0.6.0 vollständig: Dünne Commands, Owner-Regeln und die Trims sind
+  ungefahren.
+- **Der Commit-Hook** ist durch `hooks/guard-commit.test.sh` (30 Fälle) und
+  einen Handlauf in einem Wegwerf-Repo geprüft, nicht durch einen Kettenlauf.
+
+**Restrisiko.** Ein Nahttest beweist, dass zwei Enden miteinander reden, nicht
+dass sie die Wahrheit sagen. Genau dafür verlangt `cut-slices` Rule 3b, dass
+das Ticket benennt, was die echte Sache prüft.
+
+Alles darunter ist das Audit-Protokoll, gepinnt auf `cd251dc`.
+
 > **Status note, 2026-08-30 — read this first.** Everything below is pinned to
 > `cd251dc`. B1, B2 and B3 were fixed in `0b8b0db` (the index marks them so),
 > and two later waves — the `0b8b0db` doc pass and the 0.3.0 wave that worked

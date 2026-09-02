@@ -6,8 +6,12 @@ ticket and answer *did we build the right thing*. This answers *is it finished*.
 Single source of truth. Skills point here rather than restating it.
 
 The bar is cleared in `build-slice` §7, before the ticket goes to review; the
-ticket still reads `**Status:** claimed` here, because `resolved` is written
-by `review-pass` when the review cycle closes.
+ticket still reads `**Status:** claimed` here, because `review-pass` owns the
+`resolved` edit.
+
+Lines 1 and 6 of the machine block below, the pending sentinel and the close
+walk are also enforced at commit time by this plugin's hook; the paste stays as
+the ticket's evidence.
 
 ## Per ticket, checked by machine
 
@@ -15,12 +19,13 @@ Each line carries the command that decides it, or the command whose hits a
 stated rule then decides. Write the `## Bar, <date>` heading first — the
 block-count line below reads its own heading — then run each command and
 paste it with what it printed under that heading at the bottom of the
-ticket. Quote the decisive lines verbatim — the count a grep printed, the
+ticket. One exception: a review's NOW repair re-runs the machine lines and
+appends its paste **under the existing heading** (`hold-the-line`, verdict 1),
+because a dated heading is a build's. Quote the decisive lines verbatim — the count a grep printed, the
 named test line — and elide bulk with an explicit `… (N lines)` marker;
 never characterize output instead of quoting it. Quoted hits under `## Bar`
-are history by the redemption line's own rule, so quote them whole — a
-bar output that lives only in this session's context is a walked checklist by
-the next one. Read the number a grep prints, not its exit status: `grep -c`
+are history by the redemption line's own rule, so quote them whole. Read the
+number a grep prints, not its exit status: `grep -c`
 exits non-zero whenever it prints `0`. Paste commands and their output only,
 never this file's own checkbox lines: a pasted `- [ ]` trips the first line's
 grep below, and a pasted `- [x]` inflates `hold-the-line`'s criteria count.
@@ -62,7 +67,10 @@ grep below, and a pasted `- [x]` inflates `hold-the-line`'s criteria count.
       rules — the ticket file, `live-inputs.md`, tickets whose debts §5
       redeemed, and on the skeleton the effort's planning artifacts (the
       plan rides the skeleton's commit, and §3 writes the verify command
-      into `spec.md`) — are expected, and so are the ticket's test files:
+      into `spec.md`) — are expected, and so is, on the skeleton, any
+      `docs/issues/<other-slug>/shape.md` the shaping session minted or
+      appended to: stub shapes ride the skeleton's commit like the plan. So
+      are the ticket's test files:
       `Touches` lists production files only, but the seam test and any
       criterion tests are this ticket's work;
       any other unexplained file is a finding, including build artifacts.
@@ -80,9 +88,9 @@ checked and is not is worse than a line that admits it is judgement.
 - [ ] **Judgement.** The seam test was watched failing before the code existed,
       and was broken once on purpose. The `Red:` and `Mutated:` lines in
       `## Resolution` carry the two assertion messages; a resolution without
-      them is this line failing. One shared exception (`review-pass`'s
-      criterion branch): a repair test born green records
-      `Red: none — born green` and the `Mutated:` line is the sole proof. Only the session that watched them knows the
+      them is this line failing. One shared exception, `build-slice` §2's
+      born-green case: `Red: none — born green`, and the `Mutated:` line is
+      the sole proof. Only the session that watched them knows the
       messages are real — a passing test at the end looks identical either way.
 - [ ] **Judgement.** The `## Seam check` report shows no unexplained `NOBODY`.
       A far end recorded as `ticket NN`, `operator, via <cmd>`,
@@ -120,19 +128,17 @@ its command here.
       A moved ticket keeps its status; the folder it sits in says which effort
       owns it.
 - [ ] Every `CONSUMED BY: ticket NN` forward reference in the effort (on disk
-      `**CONSUMED BY:** ticket NN`) has been
-      redeemed into a real citation, deleted together with the value nothing
-      reads, or moved to the successor effort with both of its ends. A reference
-      whose two ends land in two different efforts is the defect this flow exists
-      to prevent, arriving on schedule.
+      `**CONSUMED BY:** ticket NN`) has taken one of `cut-slices` Rule 5's
+      three endings: redeemed into a real citation, deleted together with the
+      value nothing reads, or moved to the successor effort with both of its
+      ends.
 - [ ] No exit criterion in the spec is unowned.
 - [ ] The feature runs end to end, demonstrated once, not argued.
 - [ ] Every review finding carries a verdict.
       `grep -rn '— verdict pending' docs/issues/<effort>/` shows no entry
-      line (`- [axis] **…** — verdict pending`) — the em-dash marker is the
-      entry sentinel; cycle lines say `undecided` precisely so they cannot
-      match it, and a hit that only quotes the marker inside a pasted
-      command or a close record is history.
+      line (`- [axis] **…** — verdict pending`); a hit that only quotes the
+      marker inside a paste is history, and a cycle line says `undecided` and
+      cannot match.
 
 ## The bar moves up silently and down loudly
 
