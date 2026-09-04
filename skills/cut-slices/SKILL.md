@@ -213,16 +213,32 @@ place, and it is `hold-the-line`'s criteria count after the review.
 Ceiling: **one seam, three production files, one migration.** Two seams means
 two tickets. The walking skeleton is exempt (Rule 1).
 
-**One seam means one value's journey** from its producer to its far end,
-however many hops it crosses. A ticket that introduces a new component between
-two existing ones — a queue between scanner and store — carries that value in
-and out of the new component as *one* seam: count the value, not the hops.
-Count it against Rule 2's pairs the same way: a second `CONSUMED BY` pair on
-the **same value** — the operator hop beside a `ticket NN` hop — is still one
-seam; a pair carrying a **different value** is a second seam and this rule
-says two tickets. The skeleton's two pairs ride its Rule 1 exemption. A
-forward reference is for a consumer that does not exist yet, never a licence
-to split a consumer that could be built in the same ticket.
+**One seam means one producer–consumer pair**, however many hops the value
+crosses between them. A ticket that introduces a new component between two
+existing ones — a queue between scanner and store — carries that value in and
+out of the new component as *one* seam: count the pair of ends, not the hops.
+
+**Sibling fields on the same pair are one seam.** Three `run.*` statistics
+that one producer writes onto one observation row and one consumer reads are
+one seam, not three tickets — on two conditions: they land in one commit, and
+one far-end test asserts every one of them (Rule 3). Each field still gets its
+own `PRODUCES` / `CONSUMED BY` pair, because `seam-check` greps per literal;
+the pair count is bookkeeping, the seam count is the pair of ends. Measured:
+an effort cut one ticket per field reached 23 tickets for 10 paths, and every
+split tripled the build, seam-check and review ritual for one row.
+
+Count against Rule 2's pairs the same way: a second `CONSUMED BY` pair on the
+**same value** — the operator hop beside a `ticket NN` hop — is still one
+seam. A **different producer or a different consumer** is a second seam and
+this rule says two tickets, even when the values look alike. The skeleton's two
+pairs ride its Rule 1 exemption. A forward reference is for a consumer that
+does not exist yet, never a licence to split a consumer that could be built in
+the same ticket.
+
+Bundling siblings does not lift the other ceilings: three production files
+here, `review-pass`'s diff sizing, and `hold-the-line`'s count of six criteria
+all still apply. A bundle that needs a seventh criterion is two tickets after
+all.
 
 Three is a number, not a feeling. A fourth file means either the ticket carries
 two seams, or the architecture wants a shape the ticket is fighting — say which,
