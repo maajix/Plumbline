@@ -240,6 +240,14 @@ here, `review-pass`'s diff sizing, and `hold-the-line`'s count of six criteria
 all still apply. A bundle that needs a seventh criterion is two tickets after
 all.
 
+**A constraint is not a criterion.** A decision the ticket must respect but no
+test of its own can watch go red — a threshold that stays a catalogue
+parameter, a name the check must not carry, a fork patch that stays additive —
+is a spec line under `## Decided at the edges`, cited from the ticket's prose.
+The review's Ticket axis reads the spec too. Measured: tickets cut with eight
+to ten criteria carried five constraints each, tripped `hold-the-line`'s count
+on their first review, and split into three tickets per row.
+
 Three is a number, not a feeling. A fourth file means either the ticket carries
 two seams, or the architecture wants a shape the ticket is fighting — say which,
 in the ticket, rather than moving code to satisfy a count.
