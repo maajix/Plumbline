@@ -18,6 +18,9 @@ With no effort named, it is the one under `docs/issues/` whose `spec.md` has no
 `## Close,` block — the comma matters: `## Close refused,` records a refusal and
 leaves the effort open. If several qualify, list them and ask which.
 
+Read `${CLAUDE_PLUGIN_ROOT}/references/ticket-lifecycle.md` for identity,
+status preservation and separate staging/commit calls.
+
 ## The four walks
 
 Each produces a written answer in the spec, under `## Close, <date>`. An
@@ -27,9 +30,10 @@ A walk that **refuses** — a ticket not yet `resolved` or `declined` that
 cannot move, an unredeemable reference — is also written down: `## Close refused, <date>`, naming the
 walk and what blocked it. The comma in `## Close,` is what `/close`'s
 detection greps for, so a refusal record does not make the effort read as
-closed. Either record ends in a commit: subject `CLOSE: <what closed, or
+closed. Do not append `## Close,` until every walk has passed; use a refusal block
+while work remains. Either record ends in a commit: subject `CLOSE: <what closed, or
 why refused>`, holding the close block, any moved tickets and the successor
-spec — and carrying no `(ticket NN)` suffix, which belongs to build commits.
+spec — and carrying no `(ticket <ID>)` suffix, which belongs to build commits.
 An uncommitted close is swept into the next diff and read as its work.
 
 ### 1. Forward references
@@ -45,8 +49,9 @@ written down:
 
 - **Redeemed.** NN landed; rewrite the line into the real citation, symbol and
   literal, and grep the literal inside that symbol to prove it.
-- **Deleted.** Nothing will read the value. Delete the value and the code that
-  writes it, in this edit.
+- **Deleted.** Nothing will read the value. Route the deletion through
+  hold-the-line, build and review first. Until that repair lands, record a
+  refused close; the close commit itself never deletes production code.
 - **Moved, both ends together.** The producing ticket *and* NN both go to the
   successor effort. Moving only one end is the defect this whole flow exists to
   prevent, arriving exactly on schedule.
@@ -70,8 +75,10 @@ here or moved out. A successor effort built in synthesis mode has no
 ### 3. Ticket statuses
 
 Every ticket is `resolved` or `declined`. Anything `open`, `claimed`, or
-`blocked — needs decision` either gets finished now or moves into the successor
-effort's folder, keeping its number and its status.
+`blocked — needs decision` is finished through build/review or moved into the
+successor, preserving its ID, number, status and review history. Do not move an
+uncommitted executable repair as part of a close commit: finish/review that work
+first or refuse close and leave its Handoff in place.
 
 Also run `grep -rn '— verdict pending' docs/issues/<effort>/` and read each
 hit. An entry line — `- [axis] **…** — verdict pending` — is a review whose
@@ -79,9 +86,15 @@ verdicts never came in, on a ticket that therefore never legally became
 `resolved`; a hit quoting the marker inside a paste is history, and a cycle
 line says `undecided` and cannot match. There must be no entry-line hit.
 
-Numbers are unique inside an effort, not across efforts, so a moved ticket does
-not get renumbered. The successor's walking skeleton takes the next free number
-in that folder. It is the first ticket **built** there, not the lowest number.
+Before moving, walk all active `Blocked by`, `CONSUMED BY`, `CONSUMES` and
+`deferred to` references (ticked deferrals included). Move both ends of every
+unpaid seam debt and every unfinished dependency together, repeating until
+there are no dangling references. Preserve historical blocks.
+For a Blocked by dependency that stays behind and is resolved or declined,
+verify that status, remove that local dependency, and record its stable ID and
+outcome in the successor handover. A fulfilled seam uses its real source
+citation. Check IDs and local numbers for collisions before any move; ask for a
+different successor folder if needed, never overwrite or renumber.
 
 ### 4. The whole path, once
 
@@ -108,8 +121,9 @@ exactly one ending, in writing: **promote** it now (a promotion exemption
 `live, <reason>` is priced against future hand-replays, and with no
 successor there are none — the exemption expires with the effort), **move**
 it to the successor effort with the ticket that owns its path, or **retire**
-it with the reason a decision, not a shrug. A closed effort keeps no replay
-obligations.
+it with the reason a decision, not a shrug. If promotion needs a new test,
+route it through build and review and refuse close until it lands. A closed
+effort keeps no replay obligations; only checked records ride the close commit.
 
 ## The split-off ledger
 
@@ -134,13 +148,21 @@ what happens next.
 
 An effort at the ticket ceiling closes whether or not it feels finished.
 
-Closing early is not failure. Move the unfinished tickets into a new effort
-folder with its own spec and its own walking skeleton, and finish this one at
-what is done. The successor's `spec.md` is written in the same edit, by
-`write-spec` in synthesis mode: its input is this effort's spec plus the moved
-tickets, not a new interview, and its exit criteria are the ones moved out
-here, **keeping their `E<n>` numbers**, which the moved tickets' `Serves exit
-criterion` fields point at.
+Move unfinished tickets into a new effort folder and write its spec in the
+same close operation. write-spec uses the old spec and moved tickets; moved
+exit criteria retain their E numbers. Existing files are never overwritten.
+
+The successor normally inherits the existing end-to-end path. Run that path
+and its verify command, then record `## Handover` in the successor spec:
+the path, command, decisive output, source effort and IDs of moved tickets.
+Copy the verified command into its `## Verify command`. If both pass for the
+successor's path, no new skeleton is required and the ordinary frontier applies.
+
+If the successor needs a different path, record `needs skeleton` in Handover;
+`/slice <successor>` adds the minimal skeleton and makes every unfinished
+inherited ticket depend on it. Already claimed work waits too; selection only
+considers tickets whose dependencies are satisfied. A failed check on a path
+that should already work is a finding, not permission to certify the handover.
 
 Walk 1 still runs, and it is what makes an early close safe: a producer left
 behind while its reader moves on is how the debt survives the close that was
@@ -170,5 +192,6 @@ prevent, arriving just after the last gate that could have caught it.
 End your final message by naming it: the flow ends here. The next feature
 starts in a **fresh session** with `/plumbline:shape <idea>` — and if the close
 walks passed waiting stub shapes (`**Status:** unshaped`), list them as
-candidates. A refused close ends with the debts that refused it, not with a
-command.
+candidates. For a successor, instead name `/plumbline:build <ID>` for its inherited
+frontier, or `/plumbline:slice <successor>` if Handover says needs skeleton.
+A refused close names its debts and the build/review step that settles them.

@@ -20,6 +20,9 @@ And without an effort's ticket files — a bare PR or diff review outside this
 flow — there is nothing to write a verdict into: report the findings with
 their severities and stop. The six verdicts begin where tickets exist.
 
+Read `${CLAUDE_PLUGIN_ROOT}/references/ticket-lifecycle.md` for IDs,
+resumption and repair ordering; it owns when a verdict is committed and built.
+
 ## When invoked as `/verdict`
 
 With no argument the findings are every entry still marked `— verdict pending`
@@ -50,42 +53,26 @@ finding left as prose with no verdict does not close a ticket — an unverdicted
 finding is indistinguishable from an open one, so the next review rediscovers it
 and it reads as new work.
 
-### 1. NOW — fixed in this pass
+### 1. NOW — repair before unrelated work
 
-The fix costs less than recording it, or the severity is `blocker` on code in
-the ticket you are standing in. Do it, and note it in one line. Any NOW repair
-that changes production code gets its own failing test first, whatever the
-severity — a review repair without a red test is the mid-session failure
-CRITERION warns about, one verdict to the left — **and** re-runs the
-standing bar's machine lines, appending the paste **under the ticket's existing
-`## Bar` heading, never as a new `## Bar, <date>` heading** — a dated heading
-is a build's. The repair rides the review commit, which the next cycle pins as
-its fixed point, so the red test and this paste are all the checking it will
-ever get. Only a repair that touches no production code — a comment, a doc
-line — skips both.
-
-This is the verdict for trivia: without it a thirty-second cleanup becomes a
-criterion on an unrelated ticket.
+For a cheap fix or a blocker in the current ticket. During build, write the
+criterion, repair it red-first, then include it in the normal build and review.
+During review, record executable repairs as unticked criteria, commit the
+verdict first, then build and review the repair per the shared lifecycle.
+Tests and configuration are executable work too. Pure prose/comment repairs
+may be completed in the review commit itself. Record which case applies;
+a NOW verdict is a priority decision, not evidence the repair has already passed.
 
 ### 2. CRITERION — the default for planned work
 
-The work becomes an acceptance criterion on a ticket in this effort that is not
-yet `resolved` or `declined`. **The ticket you are currently building or
-reviewing counts** — it is the most common home, and `claimed` is not a reason
-to look elsewhere. (`build-slice` keeps a ticket `claimed` through its review
-precisely so this verdict stays available for it.) One exception: when the
-ticket's cycle line reads `cycle 3 of 3`, the ticket under review is no longer
-a legal home — `review-pass` names the alternatives, because cycle-3 work here
-would demand a forbidden fourth cycle.
-
-Write it into that ticket in this edit, before implementing anything.
-
-- **On another ticket** — parked. That ticket does it later.
-- **On the ticket you are standing in** — work for *this* session. Do it now,
-  and **give it its own failing test first**. A criterion added mid-session is
-  the one most likely to be built without a red test, because the red-first
-  habit attaches to the ticket's headline seam. A criterion over behaviour that
-  is already correct is born green — `build-slice` §2 says what proves it.
+The work becomes an unticked criterion on a ticket in this effort that is not
+resolved or declined. The current claimed ticket is normally the best home.
+Write the criterion before implementing it. On another ticket it is parked;
+on the current ticket it follows the shared lifecycle: build-time findings are
+fixed before review, review-time findings are committed before the repair build.
+Born-green tests use build-slice §2's production mutation proof.
+At cycle three, a current-ticket executable repair blocks for a decision;
+record it there without starting a fourth cycle.
 
 ### 3. REOPEN — the ticket that shipped it takes it back
 
@@ -96,7 +83,8 @@ miss of what that ticket promised.
 Set that ticket back to `claimed` (a handed-off ticket already is), add the
 criterion there, and say why in a new dated `## Resolution` block when it
 re-resolves. Parking a shipped defect on a future ticket is how it disappears.
-A reopened ticket's review starts a fresh cycle count; the old count stays in
+Only reopening resolved work starts a fresh cycle count; resuming a claimed
+ticket with a Handoff preserves its count. The old count stays in
 the file as history, and the new review appends its findings blocks below the
 old ones — on a same-day reopen, suffix the new heading with ` — reopened` so
 no two headings collide.
@@ -148,15 +136,16 @@ So after a review, count both:
   spanning more than one seam, has stopped satisfying `cut-slices` Rule 4. Split it. Rule 4 has no
   enforcement point after cutting, so this is it.
 
-**The split procedure**, owned here because the split happens at verdict time.
-Never renumber. The split ticket file stays in place with
-`**Status:** declined` and the reason `split into 14a, 14b`. In the same edit,
-rewrite every `CONSUMED BY: ticket 14` line (on disk
-`**CONSUMED BY:** ticket 14` — find them with
-`grep -rn 'ticket 14' docs/issues/<effort>/`) **and** every `Blocked by` entry
-naming `14` to the half that owns it, redeeming nothing. A `claimed` ticket
-with a `## Handoff` is split only after its `Red:` line has moved into the half
-that owns that test.
+**The split procedure.** Keep the original file, set declined, and record
+`split into 14a, 14b`. Children retain the origin slug in their stable IDs.
+Move each criterion, test ownership and any Handoff Red line to its owner.
+Rewrite every active `CONSUMED BY`, `CONSUMES`, `deferred to ticket NN`
+(including ticked deferrals) and `Blocked by` reference in the effort.
+Match complete numbers: 14 is not 14a. Assign value/test references to their
+owning child; a dependency needing both children names both. Preserve history
+under dated blocks. Verify no active reference still targets the declined
+parent; resolving the review never overwrites that declined status.
+Use the same four reference forms when moving tickets at close.
 
 ## The ceiling is real
 
@@ -202,9 +191,13 @@ report):
 ```markdown
 ## Review findings, <date> — cycle N
 
+**Base:** <full commit hash or empty-tree hash>
+**Head:** <full reviewed commit hash>
+**Readers:** complete <pending until all four axes report>
+
 - [seam] **<finding>** — <severity> — verdict pending
 - [craft] clean — nothing raised
-- [ticket] **<finding>** — <severity> — NOW. <what was fixed>
+- [ticket] **<finding>** — <severity> — NOW. <comment fixed, or criterion recorded for immediate repair>
 - [bar] **<finding>** — <severity> — CRITERION on ticket NN. <what was added>
 - [craft] **<finding>** — <severity> — REOPEN ticket NN. <why it goes back>
 - [seam] **<finding>** — <severity> — ALREADY OWNED by ticket NN.

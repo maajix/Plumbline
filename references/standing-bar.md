@@ -19,9 +19,8 @@ Each line carries the command that decides it, or the command whose hits a
 stated rule then decides. Write the `## Bar, <date>` heading first — the
 block-count line below reads its own heading — then run each command and
 paste it with what it printed under that heading at the bottom of the
-ticket. One exception: a review's NOW repair re-runs the machine lines and
-appends its paste **under the existing heading** (`hold-the-line`, verdict 1),
-because a dated heading is a build's. Quote the decisive lines verbatim — the count a grep printed, the
+ticket. A review's executable NOW repair returns through build, gets a fresh Bar
+paste, and is reviewed before resolution (`ticket-lifecycle.md`). Quote the decisive lines verbatim — the count a grep printed, the
 named test line — and elide bulk with an explicit `… (N lines)` marker;
 never characterize output instead of quoting it. Quoted hits under `## Bar`
 are history by the redemption line's own rule, so quote them whole. Read the
@@ -90,7 +89,9 @@ checked and is not is worse than a line that admits it is judgement.
       `## Resolution` carry the two assertion messages; a resolution without
       them is this line failing. One shared exception, `build-slice` §2's
       born-green case: `Red: none — born green`, and the `Mutated:` line is
-      the sole proof. Only the session that watched them knows the
+      the sole proof. The Mutated line names a production mutation, never an edited expected
+      value in the test. Existing behavior tests can guard a pure refactor.
+      Only the session that watched them knows the
       messages are real — a passing test at the end looks identical either way.
 - [ ] **Judgement.** The `## Seam check` report shows no unexplained `NOBODY`.
       A far end recorded as `ticket NN`, `operator, via <cmd>`,

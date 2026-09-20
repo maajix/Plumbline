@@ -20,14 +20,13 @@ behind. A pass ordered because that report is missing or stale walks the greps
 and reads the recorded far ends only — the live-replay section below belongs to
 `build-slice` §5's run alone.
 
-**Which ticket.** With none named, the most recently built one:
-`git log --format='%h %s' | grep -E '\(ticket [0-9][0-9][a-z]?\)$' | grep -v ' REVIEW:'`,
-newest hit. Then read that ticket's `## Seam check, <date>` report against
-current source — do the cited symbols still read the cited literals — and
-re-run the pass only if the report is missing, or the diff has touched the
-seam's producer or consumer since it was written; changed tests or bookkeeping
-are not the seam moving. Findings go under the ticket's `## Seam check`
-heading, in the format below.
+**Which ticket.** Read `${CLAUDE_PLUGIN_ROOT}/references/ticket-lifecycle.md`.
+Use the newest build's qualified ID, or its path-verified legacy history.
+Read its seam report against current source and rerun only when missing or
+stale. Prove and review do not increment REPLAYS.
+Executable repairs that change a seam refresh the proof and replay affected
+live inputs during build; a second run for the same ticket does not increment
+the count again. Close keeps its separate replay count.
 
 ## The pass
 
@@ -188,7 +187,8 @@ count in the same edit that reads the far end: `REPLAYS 2 (03, 05)`. **One
 increment per ticket**: the count moves in `build-slice` §5's run — and once
 more in `close-effort` walk 4, which replays as §5 does — nowhere else;
 `/prove` and the review's Seam axis read the recorded far end without touching
-it.
+it. Creating a block records the initial observation, not a replay: it starts
+at zero, including the skeleton's own block.
 
 **A block whose last two replays matched its recorded far end gets promoted** —
 `REPLAYS 2` or higher with the record current. A `far end moved by <NN>`
@@ -196,9 +196,10 @@ rewrite restarts that count at NN's own replay; once two replays match the
 *rewritten* record, the block promotes like any other — no block is
 hand-replayed forever. At that point it is doing exactly one job — detecting a
 regression — and a test is the thing that detects regressions. The promotion
-is executed *after* the pass, as a NOW verdict on the pass's own finding:
-write the test — born green, so `build-slice` §2's proof applies, on the
-recorded far-end literal — set the
+follows the shared lifecycle as executable NOW work: during build, complete it
+before that build's bar and commit; during review or close, record the finding
+first and route it through a separate build/review. Write the test — born
+green, so `build-slice` §2's production mutation proof applies — then set the
 block to `promoted to <test>`, name the test and its mutation in the
 ticket's `## Resolution`, and stop replaying it by hand.
 

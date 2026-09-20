@@ -18,54 +18,62 @@ Es gibt bewusst kein Ship-Tor. Ausliefern hängt an deiner Pipeline, nicht an
 diesem Ablauf, und ein Tor ohne Skill ist eine Lücke, die wie ein Schritt
 aussieht.
 
-Tor 5 läuft genau einmal pro Ticket, als Schritt 5 von `build-slice`, und
+Tor 5 läuft beim Build als Schritt 5 von `build-slice` und
 hinterlässt seinen Bericht unter `## Seam check, <datum>` im Ticket. `/prove`
 auf Zuruf und die Naht-Achse der Review **lesen** diesen Bericht; sie spielen
-die Live-Blöcke nicht erneut ab und erhöhen `REPLAYS` nicht. Ohne diese Regel
-liefe der volle Durchgang dreimal je Ticket.
+die Live-Blöcke nicht erneut ab und erhöhen `REPLAYS` nicht. Ausführbare Reparaturen mit veränderter Naht erneuern den Nachweis und
+betroffene Live-Läufe, ohne denselben Ticket-Replay mehrfach zu zählen.
 
-## Der Ticket-Lebenszyklus, seit 0.3.0
+## Ticketidentität und Lebenszyklus, ab 0.6.3
 
-`build-slice` setzt nie `resolved`. Das Ticket bleibt `claimed` durch Bau,
-Resolution, Latte und Commit, und geht so in die Review — dadurch kann ein
-`required`-Finding der Review als CRITERION auf genau diesem Ticket landen,
-auch beim letzten Ticket eines Efforts. Jeder Review-Zyklus endet mit einem Review-Commit — er trägt Findings,
-Verdikte und jede von einem Verdikt editierte Ticketdatei und ist der
-Fixpunkt des nächsten Zyklus. Erst wenn kein Eintrag mehr `— verdict pending`
-trägt und kein Kriterium auf dieses Ticket kam, schreibt `review-pass` im
-selben Commit das `resolved`. REOPEN hängt später einen zweiten datierten
-`## Resolution`-Block an; der letzte ist der gültige.
+Die verbindlichen Regeln stehen in
+[`references/ticket-lifecycle.md`](../references/ticket-lifecycle.md).
+Tickets tragen eine stabile ID wie `billing/01`; Build- und Review-Commits
+verwenden dieselbe ID. Beim Umzug bleibt sie erhalten. Alte Tickets werden bei
+Benutzung über ihre Dateihistorie zugeordnet; Mehrdeutigkeit wird geklärt,
+nicht anhand einer globalen Nummernsuche geraten.
 
-Die Review läuft in einer **frischen Session** — `build-slice` endet damit,
-sie zu nennen. Die Ticketdatei trägt den Zustand, und der Kontext, der gebaut
-hat, soll die eigenen Verdikte nicht bewerten. Die vier Achsen laufen in jedem
-Fall als Subagenten.
+Build lässt das Ticket claimed. Eine Review hält Base, Head und den Zustand
+ihrer vier Leser fest. Findings und Reparaturkriterien werden zuerst committed;
+ausführbare NOW- und CRITERION-Reparaturen folgen als eigener Build-Commit und
+werden im nächsten Zyklus geprüft. Nur reine Prosa-/Kommentarkorrekturen dürfen
+direkt im Review-Commit landen. Erst ein vollständig geprüfter Stand wird
+resolved. Split und blockierte Entscheidung werden dabei nicht überschrieben.
+Nach Zyklus drei nötige Reparaturen führen zu einer Entscheidung, nicht zu
+einer verdeckten vierten Review.
 
-## Der Commit-Guard, seit 0.6.0
+Ein Audit liest den aktuellen Code gegen Ticket und Spec, auch ohne Änderungen
+seit Abschluss. Der Diff seit dem Resolve-Commit ist nur Zusatzkontext.
 
-Das Plugin bringt einen Hook mit: `PreToolUse` auf das Bash-Tool, der einen
-`git commit` blockiert, wenn der Zustand unter `docs/issues/` einer Regel des
-Flows widerspricht. Vier Prüfungen, alle reine Greps über diesen Ordner:
+## Der Commit-Guard, ab 0.6.3
 
-- ein noch offenes `— verdict pending` in einer geänderten Ticketdatei,
-- ein hinzugefügtes `## Bar,`-Heading, während ein Kriterium unangehakt ist,
-  ein `## Handoff` steht oder `## Resolution` fehlt,
-- ein `**Status:** resolved` außerhalb eines Review-Commits,
-- ein `## Close,` in der `spec.md`, während im Ordner ein Ticket weder
-  `resolved` noch `declined` ist.
+Der Bash-PreToolUse-Hook prüft einen festen Snapshot des **Git-Index**:
+offene Findings, eine Bar bei unerledigter Arbeit, resolved ohne neuen
+Review-Block und ein Close mit nicht abgeschlossenen Tickets. Inhalte und
+Ordnerbelegung kommen vollständig aus dem gestagten Baum.
 
-Der Hook vergleicht den **Arbeitsbaum** mit `HEAD`, nicht den Index:
-`git add -A && git commit` staged innerhalb desselben Bash-Aufrufs, zur
-Hook-Zeit wäre `--cached` leer. Er sieht nur Commits, die Claude über das
-Bash-Tool macht. Code-Fences werden vor jeder Prüfung entfernt, damit gepastete
-Kommando-Ausgaben und Template-Beispiele nicht als lebender Zustand gelesen
-werden; ein laufender Merge, Rebase, Cherry-pick oder Revert wird übersprungen. Jeder interne Fehler endet mit Exit 0 — ein Fehler im Hook
-darf keinen Commit blockieren. Abschalten: Plugin-Hooks in den Settings
-deaktivieren oder außerhalb der Session committen. Geprüft von
-`hooks/guard-commit.test.sh`, 30 Fälle.
+Staging und Commit sind getrennte Bash-Aufrufe. Unterstützt sind einfache
+`git commit -m …`/`-F <datei>`, `git -C <repo>`, RTK-Wrapper und ein einfaches
+`env`. Mehrzeilige Nachrichten in Anführungszeichen bleiben erlaubt.
+Verkettungen, Substitutionen, alternative Git-Umgebungen, Dateiparameter und
+indexverändernde Commit-Optionen wie `-a` werden mit einer Anleitung abgelehnt.
 
-Die restlichen Regeln des Flows brauchen die Toolchain des Zielrepos und
-bleiben deshalb bei den Skills — das Plugin kennt sie nicht.
+Der Schutz gilt für diesen Claude-Ablauf, nicht für beliebige Shell-Skripte,
+Aliase, externe Commits oder konkurrierende Indexänderungen. Code-Fences werden
+vor dem Vergleich aus den vollständigen Dokumenten entfernt. Laufende
+Merge-/Rebase-Vorgänge bleiben ausgenommen. Erwartbare Git-Fehler blockieren;
+unerwartete interne Fehler bleiben mit Diagnose fail-open.
+Ausführbare Prüfung: `bash hooks/guard-commit.test.sh`.
+
+## Folge-Efforts
+
+Ein Nachfolger übernimmt den nachgeprüften End-to-End-Pfad und das
+Verify-Kommando. Ein neuer Skeleton ist nur für einen anderen, noch fehlenden
+Pfad nötig und wird dann Voraussetzung aller unfertigen Tickets.
+Alle aktiven Schuld- und Abhängigkeitsverweise werden beim Split oder Umzug
+mitgeführt; historische Blöcke bleiben erhalten. IDs ändern sich nicht.
+Ein Close, das Codeänderungen oder neue Tests braucht, wartet auf deren Build
+und Review. Sein Commit enthält ausschließlich geprüfte Abschlussartefakte.
 
 ## Die drei gebündelten Basis-Skills
 
@@ -196,16 +204,11 @@ Verify-Kommando ins Spec nach, unter `## Verify command` (`cut-slices` Regel 1,
 `write-spec`). Das Plugin liefert kein Skript — es kennt die Toolchain des
 Zielrepos nicht.
 
-Gemessen ist daran inzwischen einiges: im zweiten Testlauf (siehe
-`docs/VALIDATION.md`, letzter Nachtrag) starb eine Session absichtlich mitten
-in §2, eine frische setzte über Handoff und §0 fort, und eine Review starb
-mit offenen Verdikten und wurde von der nächsten Session geschlossen — die
-Prämisse hielt. Ungemessen bleiben Brownfield und Nachfolge-Efforts.
-
 ## Obergrenzen
 
 Drei Fragerunden beim Shapen. 25 Tickets je Effort. Drei Review-Zyklen je
-Review — ein späteres REOPEN startet eine neue Review mit frischer Zählung;
+Review — nur ein REOPEN bereits abgeschlossener Arbeit startet eine neue
+Review mit frischer Zählung;
 der Deckel begrenzt die Review, nicht die Lebensgeschichte des Tickets. Ein
 erreichter Deckel ist ein Signal zum Teilen, nie ein Grund, den Deckel
 anzuheben.

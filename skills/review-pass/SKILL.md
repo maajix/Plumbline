@@ -25,36 +25,14 @@ normally reads `claimed`:
 
 ## Fix the point first
 
-With no ticket named, the target is the ticket of the newest build commit.
-
-Pin the comparison before anything else: `git diff <fixed-point>...HEAD`. Build
-commits are found with
-`git log --format='%h %s' | grep -E '\(ticket NN\)$' | grep -v ' REVIEW:'`,
-adding `--reverse` for the oldest hit — `REVIEW:` subjects are review commits
-and never build commits. Cycle 1 pins the parent of the ticket's **first**
-build commit ("first", so a criterion repair later in history cannot shrink the
-diff to itself); cycle 2 and 3 pin the previous cycle's review
-commit — every cycle leaves one, whichever way it closes; a re-review after
-REOPEN pins the parent of the reopen repair's build commit — the tickets that
-landed in between were reviewed by their own cycles, and their work is not
-this review's diff. Confirm the ref
-resolves and the diff is non-empty. A bad ref should fail here, not inside
-four parallel readers. One bad ref has a known meaning: no build commit for
-this ticket at all says the build session died between §7 and §8 — hand back
-to `build-slice` to run §8, and review after.
-
-A re-read outside the ticket's cycles — an audit of `resolved` work — is
-none of the above: it pins the commit that resolved the ticket, appends
-under `## Review findings, <date> — audit`, consumes no cycle, and touches
-no `Status`. Its block closes with `Audit — undecided: none` in place of a
-cycle line, and it commits on its own, immediately:
-`REVIEW: audit — <what it settled> (ticket NN)`. Its findings take verdicts like any other, and an audit whose
-verdicts all come back DECLINE or ALREADY OWNED is the theatre tell below,
-single pass or not.
-
-If HEAD is the repo's first commit, there is no earlier ref: the fixed point is
-the empty tree: `git diff $(git hash-object -t tree /dev/null) HEAD`. That
-is the walking skeleton's normal case on greenfield.
+Read `${CLAUDE_PLUGIN_ROOT}/references/ticket-lifecycle.md`. It owns stable
+IDs, legacy commit lookup, pinned Base/Head, interrupted cycles and the audit
+mode. With no ticket named, select the newest build by qualified ID; legacy
+subjects require the path-scoped check described there.
+For a bare PR use the requester's comparison point and freeze its head too.
+For a ticket cycle, before starting readers write Base, Head and Readers: pending.
+An audit records its Head and audit heading instead; a bare PR writes no ticket.
+Resume an unfinished attempt instead of opening another cycle.
 
 ## The four axes, read in parallel, reported apart
 
@@ -68,15 +46,16 @@ converged. Convergence is signal about the finding's weight, not duplication to
 clean up.
 
 **What every reader gets.** Each axis reader is its own subagent, handed: the
-fixed-point ref and `git diff <ref>...HEAD`, the ticket file's path, the repo as
-its working directory, its own axis paragraph below verbatim, and the
+pinned Base and Head and `git diff <base> <head>` (audit: current source plus
+original build context), the ticket file's path, the repo as its working
+directory, its own axis paragraph below verbatim, and the
 instruction *"cold read; report `<file::symbol>: <label>: <problem>. <fix>.`
 lines only; edit nothing"*. Plus one extra input per axis:
 
 | axis | also gets |
 |---|---|
 | Seam | the ticket's `## Seam check` report, and `plumbline:seam-check` |
-| Ticket | the ticket file itself |
+| Ticket | the ticket file and effort spec, including referenced constraints and Load |
 | Bar | `${CLAUDE_PLUGIN_ROOT}/references/standing-bar.md` and the ticket's `## Bar` block |
 | Craft | the repo's documented standard, by path |
 
@@ -85,8 +64,8 @@ appended to the ticket, against current source: does anything read what this
 wrote; does anything write what it reads. Re-run `seam-check` only if the
 report is missing or the diff has touched the seam's producer or consumer
 since it was written — a criterion repair that changed tests and bookkeeping
-is not the seam moving, and closing's rule that the repair leaves the report
-standing wins. A re-run ordered here reads the recorded far ends against
+is not the seam moving. A repair that changed production behavior must refresh
+its proof per the lifecycle. A re-run ordered here reads the recorded far ends against
 current source; it never replays and never touches `REPLAYS` (`seam-check`).
 This axis goes first because it is the axis the measurement behind this flow
 found the defects in.
@@ -158,12 +137,13 @@ until `hold-the-line` answers, and the verdict replaces that marker in the
 same edit that records it. The open pending entries **are** the state of the
 cycle: a session that finds them knows exactly which findings were raised and
 which still owe an answer, without re-running anything. A cycle with no
-pending entries left is a cycle whose verdicts are all in.
+pending entries left and Readers complete is a cycle whose verdicts are all in.
 
 Writing them early does not merge them. The axis tag keeps the four readers'
 entries apart in the ticket — the separation the readers were run under
 survives into the file or it was never real.
 
+Set `**Readers:** complete` only after all four reports are recorded.
 Early means *after all four have reported*, never while one is still reading:
 the Ticket axis has this file open, and `cold-read` discards its line-numbered
 findings if the file moves under it.
@@ -175,55 +155,20 @@ here.
 
 ## Closing the cycle
 
-A session arriving at a ticket whose newest findings block is fully
-verdicted but has no matching `REVIEW: … (ticket NN)` commit finishes
-exactly that — the last review died between its verdicts and its commit; run
-this section, do not open a new cycle.
-
-When no `— verdict pending` entry remains, commit the cycle **either way**:
-one review commit holding the ticket file, any NOW repairs, and every other
-ticket file a verdict in this cycle edited (CRITERION, REOPEN, TICKET all
-write elsewhere) — `REVIEW: <what the review settled> (ticket NN)`. An
-uncommitted review is swept into the next commit's diff and read as its work,
-and this commit is the fixed point the next cycle pins.
-
-- If no criterion was added to this ticket, set `**Status:** resolved` in that
-  same commit — this is the one edit that writes that value.
-- If a criterion **was** added to this ticket, the commit carries the findings
-  and verdicts, the ticket stays `claimed`, and it goes back to `build-slice`
-  (red test first, as always; a criterion over behaviour that is already
-  correct is born green, and `build-slice` §2 says what proves it then). The
-  repair runs
-  `build-slice` §2–§3 and §7 — a dated addition to `## Resolution` and a fresh
-  `## Bar, <date>` paste — but not §5: the seam report stands and `REPLAYS`
-  moves once per ticket. The repair lands as its own `(ticket NN)` build
-  commit, and the re-review of that work is the next cycle.
-
-A ticket reopened later by a REOPEN verdict starts a fresh cycle count when it
-returns here; the old count stays in the file as history.
+Follow the shared lifecycle's state table and repair ordering. Once all four
+readers and verdicts are recorded, commit the review findings and any affected
+ticket files. NOW and CRITERION repairs to executable behavior are built in a
+separate commit and receive the next review; no executable repair rides an
+approval commit. Only a clean reviewed snapshot becomes resolved.
+A split stays declined and a decision stays blocked.
 
 ## Three cycles, and the bound does not move
 
-A cycle is one pass of all four axes, plus the verdicts and repairs that follow
-it. The re-review is the start of the next cycle, not the end of this one.
-
-The cycle line `hold-the-line`'s recording format ends each block with is what
-survives the session boundary. A bound nobody writes down cannot survive one,
-and a count without its axes leaves the next session unable to tell which axis
-raised a pending finding it never saw.
-
-Stop when the next cycle returns only findings already considered, **or** after
-three cycles, **or** when the user says ship it.
-
-If cycle three still surfaces substantive findings, that is information about
-the artifact, not a reason to run a fourth. Remaining `required` findings take
-CRITERION on a *different* unfinished ticket, or TICKET — never another
-criterion here. If nothing can hold them, set the ticket
-`blocked — needs decision`, record why in the findings block, and hand it to
-the user. Never a fourth cycle.
-
-If three cycles feel obviously insufficient because the change is large: the
-change is too large. Split it and review the parts. **Do not lift the bound.**
+One pass of all four axes is one cycle. Resumption keeps its number.
+At cycle three, any remaining executable repair blocks for a decision; keep
+its criterion and explain what is unverified. Never silently reset the counter,
+run a fourth cycle or make an unreviewed repair to close the ticket.
+A genuine later REOPEN of resolved work starts a new review per the lifecycle.
 
 ## The tell that a review is theatre
 
