@@ -202,6 +202,8 @@ It is the evidence for every quote in the shape.
 **For whom, when:** <one paragraph>
 **Working looks like:** <the observation, not the metric>
 **Worst wrong answer:** <one sentence, user-confirmed>
+**Load:** <volumes, rates, sizes and retention, with units; explicitly unknown
+where the interview did not establish a number>
 **Discovered while shaping:** <discovering effort>, <date> <only if this
 shape replaced a stub or a later interview split into this folder — carried
 verbatim, one line per discoverer>

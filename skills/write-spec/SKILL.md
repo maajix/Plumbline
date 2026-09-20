@@ -103,7 +103,7 @@ Numbering matters: `cut-slices` gives each ticket a `Serves exit criterion`
 field, and an exit criterion no ticket names is work nobody is doing.
 
 **Verify command.** A section with its own heading — `## Verify command` — so
-the bar can find it without guessing. Left blank here and filled in by the
+the bar can find it without guessing. For a fresh effort, left blank here and filled in by the
 session that builds the walking skeleton, because that session is the first to
 meet the real toolchain (`cut-slices` Rule 1). One line: the command that runs
 this effort's tests from a clean checkout, in a form that **prints the name of
@@ -111,7 +111,11 @@ each test it ran** (`pytest -v`, not `-q`) — the standing bar reads a named
 test in that output on every ticket, so a spec without it hands every later
 ticket a bar line it can only assert.
 
-**Load.** The volumes and rates from the shape, carried forward as numbers with
+A successor inherits the command and verified path from close-effort's
+`## Handover`; only a different unbuilt path needs a new skeleton. Its
+synthesis spec preserves moved E numbers and ticket IDs.
+
+**Load.** The shape's explicit Load field, carried forward as numbers with
 units: how many, how often, how big, how old. Then name, for each, what in the
 system has to survive it.
 

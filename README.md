@@ -110,10 +110,16 @@ Every command is also reachable namespaced: `/plumbline:build`,
 `/review-pass`, because `/review` is already a built-in Claude Code command and
 a plugin does not shadow it.
 
+Ticket IDs include their origin effort: `billing/01`. They survive moves, and
+build/review commits end with `(ticket billing/01)`. Numeric command arguments
+still work within one unambiguous effort. Old tickets are upgraded when used,
+with path-scoped history checks; no old commits are rewritten.
+
 A ticket only becomes `resolved` once its review cycle closes: `build-slice`
 takes it to `claimed` through build, bar and commit, and `review-pass` writes
-`resolved` once no finding still carries `— verdict pending` and no verdict has
-placed a criterion on it. Details: [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
+`resolved` once no finding still carries `— verdict pending`, all criteria are
+ticked, and no executable change followed the reviewed head.
+Details: [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
 
 All artefacts of an effort live under `docs/issues/<effort>/`: `interview.md`,
 `shape.md`, `spec.md`, `live-inputs.md`, and the tickets as `NN-<slug>.md`. A
@@ -139,9 +145,10 @@ Then the loop, once per ticket:
 ```
 
 When that cycle closes clean, `review-pass` writes `**Status:** resolved`
-itself and makes the review commit. If a verdict placed a criterion or a NOW
-fix on the ticket, repair it and run `/review-pass` again — that is cycle 2, and
-three cycles is the cap.
+itself and makes the review commit. If a verdict requires executable work (NOW included), the review first commits
+its findings and an unticked criterion. Run `/build 01` for the repair, then
+`/review-pass` again. Three cycles is the cap; remaining repairs at cycle three
+block for a decision. Prose/comment-only repairs may ride the review commit.
 
 ```
 /build                       # no argument: 01 is resolved, so the frontier is 02
@@ -186,13 +193,18 @@ nothing about your toolchain.
 | `**Status:** resolved` is added outside a review commit | only a closing review cycle writes that value |
 | a spec gains `## Close,` while a ticket in its folder is neither `resolved` nor `declined` | the close walk over ticket statuses |
 
-It sees only the commits Claude makes through the Bash tool, and it compares
-the working tree against `HEAD` rather than the index, because
-`git add -A && git commit` stages inside the same call. Fenced blocks are
-stripped before anything is read, so pasted command output and template
-examples never read as live state, and a merge, rebase, cherry-pick or revert
-in progress is skipped entirely. Any internal error exits 0 — a bug in the hook
-must not block a commit.
+The guard checks one **staged tree**, not the working tree. Stage the intended
+files, then invoke commit in a separate Bash call. Simple `git commit -m …`
+or `-F <file>`, `git -C <repo>`, `rtk git`, `rtk proxy git` and a plain
+`env` prefix are supported. Quoted multiline messages work. Combined commands,
+substitutions, alternate Git environments, file arguments and index-changing
+commit options such as `-a` are refused with a retry instruction.
+
+This protects the documented Claude workflow, not arbitrary scripts, aliases,
+external commits, concurrent index writers or native Git hooks that alter the
+index. Fenced text is stripped from complete file snapshots. In-progress merges,
+rebases, cherry-picks and reverts are skipped. Expected command/Git failures
+block; unexpected internal errors remain fail-open with a diagnostic.
 
 To switch it off, disable this plugin's hooks in your settings, or commit
 outside the session. The check that proves it works:
@@ -240,6 +252,11 @@ prerequisites. They are useful standalone:
 | `price-the-wall` | Gate 4, the moment "that's not possible" shows up. |
 | `structured-debugging` | Gate 4, only when the cause is unknown. |
 
+Shared identity and state transitions:
+[`references/ticket-lifecycle.md`](references/ticket-lifecycle.md).
+A successor reuses a verified end-to-end path and its verify command; only a
+new path needs a new skeleton. Close records the handover and next command.
+
 Shared quality bar for all of them:
 [`references/standing-bar.md`](references/standing-bar.md).
 
@@ -252,21 +269,12 @@ more than the work — there, `build-slice` §2/§5 (red test, seam proof) and
 
 ## Status
 
-Run for real three times, not just designed. A full chain in a throwaway repo —
-red test, mutation step, seam check, live replays, verdicts through to
-`resolved`, and a close correctly refused because a ticket was still open. A
-second run deliberately suffered the session boundary: death mid-build, handoff,
-resume, a dying review, a real `REOPEN`. A third ran the prescribed review mode
-properly — four parallel axis subagents that could not see each other. No
-blockers in any run, and every rule gap they found is fixed. On top of that, an
-independent multi-agent review across seven reading axes, adversarially
-verified.
+Run the commit-guard regressions with `bash hooks/guard-commit.test.sh`.
+The workflow has also been exercised in isolated Claude Code sessions;
+agent judgement is still required, not mechanically guaranteed.
 
 A seam test proves two ends talk. It never proves they tell the truth — which is
 why `cut-slices` rule 3b makes the ticket name what checks the real thing.
-
-What is measured, what is not, and the residual risk:
-[`docs/VALIDATION.md#stand-heute`](docs/VALIDATION.md#stand-heute).
 
 ## Credits and prior art
 
@@ -295,5 +303,5 @@ by the same author, bundled here so the plugin runs without prerequisites.
 
 MIT — see [`LICENSE`](LICENSE).
 
-`docs/DIAGNOSIS.md` and `docs/WORKFLOW.md` are written in German,
-`docs/VALIDATION.md` is mixed. The skills, commands and this README are English.
+`docs/DIAGNOSIS.md` and `docs/WORKFLOW.md` are written in German.
+The skills, commands and this README are English.

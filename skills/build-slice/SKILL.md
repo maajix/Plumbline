@@ -11,36 +11,16 @@ start, during, and at the end, not remembered.
 
 ## 0. Pick the frontier, when no ticket is named
 
-This flow is single-session: ticket state lives in the files, never in a lock.
-**Every `claimed` ticket comes before every `open` one** — `claimed` means a
-session took it and the review cycle has not closed: the build is half done, or
-REOPEN sent it back, or it is built and awaiting review. All are work already
-started.
-
-The ticket file says which of those it is. Before claiming, read its tail, in
-this order:
-
-- `— verdict pending` entries under a `## Review findings` heading — a
-  review died mid-cycle. Close the cycle (`hold-the-line`, then
-  `review-pass`'s closing rules); do not build. Pending entries under
-  `## Seam check` or `## Build findings` are a *build* session's unfinished
-  verdicts — this skill's case, settled in its own §4/§5 flow.
-- An unticked `- [ ]` criterion, a `## Handoff` block, or no `## Resolution` /
-  `## Bar` yet — build work, this skill's case: continue below. An unticked
-  criterion is what a REOPEN and a review's CRITERION verdict leave behind, and
-  neither goes to review before it is built.
-- Otherwise — `## Resolution` and `## Bar` present, every criterion ticked, no
-  handoff, no pending entries — built, awaiting review. One check first:
-  confirm the build commit exists —
-  `git log --format='%h %s' | grep -E '\(ticket <NN>\)$' | grep -v ' REVIEW:'`,
-  the newest hit being the latest build commit, `--reverse` giving the first;
-  a working tree still holding the work uncommitted means the session died
-  between §7 and §8, so run §8 before anything else. Then hand the ticket to
-  `review-pass`; there is nothing here to build.
+Read `${CLAUDE_PLUGIN_ROOT}/references/ticket-lifecycle.md` first. It owns
+ticket selection by ID, legacy history, state/resumption priority and commits.
+Apply its resumption table before deciding there is build work: an interrupted
+review must commit its verdicts before a repair starts. Pending entries under
+`## Seam check` or `## Build findings` belong to this build's §4/§5 flow.
 
 Within the `claimed` set, and then within the `open` set, take the
 lowest-numbered ticket whose every `Blocked by` entry is `resolved` or
 `declined`. Sort `14a` and `14b` after `14` and before `15`.
+An explicitly named ticket must satisfy the same dependency check.
 
 If nothing qualifies, list the tickets and what blocks each, and stop — the
 user decides.
@@ -52,7 +32,8 @@ else — see "The session is allowed to end first" below.
 
 Before any code:
 
-- Read the ticket file whole.
+- Read the ticket file whole, establish its stable ID, and read the effort's
+  spec, including its paths, constraints, edges, Load and exit criteria.
 - Read the current source of **every** file its `Touches` line names, plus the
   file behind its `CONSUMED BY` symbol — for the code form; the operator,
   out-of-repo and `ticket NN` forms have no file to open, the command output,
@@ -84,10 +65,12 @@ test to reach its assertion, then watch *that* fail.
 
 **Prove the test discriminates** (`cut-slices` Rule 3): once the test is green
 in step 3, change the reader's literal — the status string, the column name,
-the key; on a `PRODUCES: nothing` ticket, the behaviour test's expected
-literal — and watch it go red again, then change it back. Copy that assertion
-message too; `## Resolution` has a `Mutated:` line for it. A seam test you have
-not tried to break is a claim, not a check.
+the key; on a `PRODUCES: nothing` ticket, temporarily break the production
+behaviour — and watch it go red again, then change it back. Copy that assertion
+message too; `## Resolution` has a `Mutated:` line for it. Keep the test
+unchanged during mutation: changing its expected value proves
+nothing about production behavior. Existing behavior tests may guard a pure
+refactor. Restore the production change and watch the test pass again.
 
 **A test born green.** A criterion that only adds an assertion over behaviour
 that is already correct has no red to watch: write `Red: none — born green` on
@@ -246,18 +229,10 @@ ticket. A finding this bar run itself raises goes under `## Build findings`
 
 ## 8. Commit, then hand to review
 
-One build commit per ticket where possible. Subject uses the repo's uppercase
-type prefix — on a repo too young to have one, pick any short uppercase
-prefix except `REVIEW:`, which review commits own — states what now works,
-not what was edited, and ends with `(ticket NN)`, which is how
-`/review-pass` finds its default target.
-
-Then hand to `review-pass`. Do not review your own work in the same pass
-(`cold-read`). The review is the next session's job (below); `review-pass` runs
-its four readers as subagents in any case. The review's verdicts are what close
-the ticket:
-`review-pass` sets `**Status:** resolved` when its cycle ends clean, and makes
-the review commit.
+One build commit per ticket where possible. Use the repo's uppercase type
+prefix (never `REVIEW:`) and end with `(ticket <ID>)`, e.g. `(ticket billing/01)`.
+Stage and commit separately per the shared lifecycle. Leave the ticket claimed
+and hand it to a fresh review session; only a clean closing review resolves it.
 
 **Finish your edits to the ticket file before any cold read opens on it**
 (`cold-read`: an artifact that moves under a reader discards every

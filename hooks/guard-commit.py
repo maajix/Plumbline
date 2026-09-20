@@ -1,28 +1,12 @@
 #!/usr/bin/env python3
-"""Plumbline commit guard.
+"""Check Plumbline's four commit invariants against one staged tree.
 
-Blocks a `git commit` whose `docs/issues/` state contradicts four rules of the
-flow that need nothing but greps over that folder:
-
-  A  a changed ticket file still carries a `— verdict pending` entry
-  B  a build commit adds `## Bar,` while the ticket is unfinished
-  C  `**Status:** resolved` appears outside a review commit
-  D  a spec is closed while a ticket in its folder is neither
-     `resolved` nor `declined`
-
-Every other rule in the flow needs the target repo's toolchain and stays with
-the skills. B's three counts use the standing bar's own greps, so a ticket that
-clears the bar cannot be blocked here.
-
-The guard compares the **working tree** against HEAD, not the index:
-`git add -A && git commit` stages inside the same Bash call, so at hook time
-`--cached` would be empty. Fenced blocks are stripped before anything is read,
-because this flow pastes command output and template examples into tickets.
-
-Exit 2 blocks the command and shows stderr to Claude. Any internal error exits
-0 with a note: a bug in this hook must never block a commit.
+This is a guard for the documented Claude commit workflow, not a shell security
+boundary. Stage in a separate call, then use a simple git/rtk commit command.
+Expected command/Git errors block; unexpected internal errors remain fail-open.
 """
 
+import difflib
 import json
 import os
 import re
@@ -30,11 +14,9 @@ import shlex
 import subprocess
 import sys
 
-# `NN-<slug>.md`, `14a-<slug>.md`; never `2026-01-02-notes.md`
 TICKET_NAME = r"\d\d[a-z]?(?:[-_. ][^/]*)?\.md"
 TICKET = re.compile(r"^docs/issues/[^/]+/" + TICKET_NAME + r"$")
 SPEC = re.compile(r"^docs/issues/[^/]+/spec\.md$")
-NAME_ONLY = re.compile(r"^" + TICKET_NAME + r"$")
 SENTINEL = "— verdict pending"
 STATUS = re.compile(r"^\*\*Status:\*\*[ \t]*(.*?)[ \t]*$", re.M)
 FENCE = re.compile(r"(?ms)^ {0,3}(?:```|~~~).*?^ {0,3}(?:```|~~~)[^\n]*$")
@@ -45,85 +27,159 @@ GIT_VALUE_OPTS = {
 }
 IN_PROGRESS = ("MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD",
                "BISECT_LOG", "rebase-merge", "rebase-apply")
+SEPARATORS = set(";&|\n")
+COMMIT_FLAGS = {"--allow-empty", "--allow-empty-message", "--no-verify",
+                "--no-gpg-sign", "--signoff", "-s", "--quiet", "-q", "--verbose", "-v"}
+COMMIT_VALUES = {"-m", "--message", "-F", "--file", "--author", "--date"}
+HELP = ("Stage in a separate Bash call, then run git [-C <repo>] commit -m <message> "
+        "or -F <file> (rtk git / rtk proxy git and plain env are supported). "
+        "Do not combine commands, use substitutions, alternate Git environments, "
+        "file arguments, or options that change the staged snapshot.")
 
 
-def git(cwd, *args):
-    return subprocess.run(
-        ("git", "-c", "core.quotePath=false") + args,
-        cwd=cwd,
-        capture_output=True,
-        text=True,
-        timeout=8,
-    )
+class GuardError(Exception):
+    """An expected failure that must not be mistaken for a clean check."""
 
 
-def is_git_commit(command):
-    """True only for a real `git commit`, not for a command mentioning one."""
-    for segment in re.split(r"&&|\|\||[;|\n]", command):
-        try:
-            tokens = shlex.split(segment)
-        except ValueError:
+def git(cwd, *args, optional=False):
+    try:
+        result = subprocess.run(
+            ("git", "-c", "core.quotePath=false") + args,
+            cwd=cwd, capture_output=True, text=True, timeout=8,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise GuardError(f"Git check failed: {exc}") from exc
+    if result.returncode and not optional:
+        raise GuardError(result.stderr.strip() or "Git check failed")
+    return result
+
+
+def commit_prefix(tokens, start):
+    """Recognize only direct git commands and the documented wrappers."""
+    i = start
+    unsafe = False
+    while i < len(tokens):
+        name = os.path.basename(tokens[i])
+        if re.match(r"^[A-Za-z_][A-Za-z_0-9]*=", tokens[i]):
+            unsafe = True
+            i += 1
+        elif name == "env":
+            i += 1
+            while i < len(tokens) and tokens[i].startswith("-"):
+                option = tokens[i]
+                unsafe = True
+                i += 2 if option in ("-u", "--unset", "-C", "--chdir") else 1
+        elif name == "rtk":
+            i += 1
+            if i < len(tokens) and tokens[i] == "proxy":
+                i += 1
+        else:
+            break
+    if i >= len(tokens) or os.path.basename(tokens[i]) != "git":
+        return None
+    i += 1
+    directories = []
+    while i < len(tokens) and tokens[i].startswith("-"):
+        option = tokens[i]
+        if option in GIT_VALUE_OPTS:
+            if i + 1 >= len(tokens):
+                return None
+            if option == "-C":
+                directories.append(tokens[i + 1])
+            else:
+                unsafe = True
+            i += 2
+        elif option.startswith("-C") and len(option) > 2:
+            directories.append(option[2:])
+            i += 1
+        else:
+            unsafe = True
+            i += 1
+    if i < len(tokens) and tokens[i] == "commit":
+        return i + 1, directories, unsafe
+    return None
+
+
+def command_repo(command, cwd):
+    # Keep quoted newlines intact; never split raw shell text with a regex.
+    lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|()<>\n")
+    lexer.whitespace = " \t\r"
+    lexer.commenters = ""
+    try:
+        tokens = list(lexer)
+    except ValueError:
+        # A malformed quoted command cannot execute as a normal shell command.
+        return None
+    while tokens and tokens[0] and not tokens[0].strip("\n"):
+        tokens.pop(0)
+    while tokens and tokens[-1] and not tokens[-1].strip("\n"):
+        tokens.pop()
+    # shlex groups adjacent punctuation, including mixed ';\n' separators.
+    starts = [0] + [i + 1 for i, token in enumerate(tokens)
+                    if token and set(token) <= SEPARATORS]
+    for start in starts:
+        found = commit_prefix(tokens, start)
+        if found is None:
             continue
-        if not tokens or os.path.basename(tokens[0]) != "git":
-            continue
-        i = 1
+        i, directories, unsafe = found
+        if start or unsafe or "`" in command or "$" in command:
+            raise GuardError(HELP)
+        # A small allow-list makes every accepted invocation commit the index.
+        # ponytail: arbitrary shell scripts/aliases are outside this guard;
+        # use a native Git hook if enforcement outside this workflow is needed.
         while i < len(tokens):
-            token = tokens[i]
-            if token in GIT_VALUE_OPTS:
+            option = tokens[i]
+            if option in COMMIT_FLAGS:
+                i += 1
+            elif option in COMMIT_VALUES and i + 1 < len(tokens):
                 i += 2
-            elif token.startswith("-"):
+            elif any(option.startswith(flag + "=") for flag in COMMIT_VALUES if flag.startswith("--")):
+                i += 1
+            elif option.startswith(("-m", "-F")) and len(option) > 2:
                 i += 1
             else:
-                if token == "commit":
-                    return True
-                break
-    return False
+                raise GuardError(HELP)
+        for directory in directories:
+            cwd = os.path.abspath(os.path.join(cwd, directory))
+        return cwd
+    return None
 
 
 def strip_fences(text):
     return FENCE.sub("", text)
 
 
-def changed_paths(cwd, base):
-    """path -> (status letter, pathspecs to diff), for everything under docs/issues/."""
-    out = {}
-    r = git(cwd, "diff", base, "--name-status", "--", "docs/issues")
-    for line in r.stdout.splitlines():
-        parts = line.split("\t")
-        if len(parts) < 2:
+def tree_files(cwd, tree):
+    """Read blobs under docs/issues/; directories and symlinks are not tickets."""
+    result = {}
+    listing = git(cwd, "ls-tree", "-r", "-z", tree, "--", "docs/issues").stdout
+    for entry in listing.split("\0"):
+        if not entry:
             continue
-        status, path = parts[0][0], parts[-1]
-        if status in ("R", "C"):
-            # a move carries its old content: diff both ends, judge as modified
-            out[path] = ("M", [path, parts[1]])
-        else:
-            out[path] = (status, [path])
-    r = git(cwd, "ls-files", "--others", "--exclude-standard", "docs/issues")
-    for path in r.stdout.splitlines():
-        if path.strip():
-            out[path.strip()] = ("A", [path.strip()])
-    return out
+        metadata, path = entry.split("\t", 1)
+        mode, kind, oid = metadata.split()
+        if mode not in ("100644", "100755") or kind != "blob":
+            continue
+        if TICKET.match(path) or SPEC.match(path):
+            result[path] = strip_fences(git(cwd, "cat-file", "blob", oid).stdout)
+    return result
 
 
-def read(cwd, path):
-    full = os.path.join(cwd, path)
-    if not os.path.isfile(full):
-        return ""
-    with open(full, encoding="utf-8", errors="replace") as fh:
-        return strip_fences(fh.read())
-
-
-def added_lines(cwd, base, specs, status, body):
-    if status == "A":
-        return body.splitlines()
-    args = ["diff", base, "--"] + [":(literal)" + s for s in specs]
-    r = git(cwd, *args)
-    added = "\n".join(
-        line[1:]
-        for line in r.stdout.splitlines()
-        if line.startswith("+") and not line.startswith("+++")
-    )
-    return strip_fences(added).splitlines()
+def changed_paths(cwd, base, tree):
+    # NUL delimiters preserve spaces, tabs and glob characters in filenames.
+    entries = git(cwd, "diff", "--name-status", "-z", "-M", base, tree,
+                  "--", "docs/issues").stdout.split("\0")
+    result = {}
+    i = 0
+    while i < len(entries) and entries[i]:
+        status, path = entries[i], entries[i + 1]
+        i += 2
+        if status.startswith(("R", "C")):
+            result[entries[i]] = path
+            i += 1
+        elif not status.startswith("D"):
+            result[path] = path
+    return result
 
 
 def count(pattern, body):
@@ -132,129 +188,81 @@ def count(pattern, body):
 
 def status_value(body):
     found = STATUS.search(body)
-    if not found:
-        return "missing"
-    return found.group(1).strip() or "empty"
+    return (found.group(1).strip() or "empty") if found else "missing"
 
 
-def check(cwd, base, path, status, specs):
-    """Return the problems this one file carries."""
-    if status == "D":
-        return []
-    body = read(cwd, path)
-    if not body:
-        return []
-    added = added_lines(cwd, base, specs, status, body)
+def check(path, before, body, files):
+    # Strip fences in both complete snapshots, not in an isolated diff hunk.
+    added = [line[2:] for line in difflib.ndiff(before.splitlines(), body.splitlines())
+             if line.startswith("+ ")]
     problems = []
-
     if TICKET.match(path):
-        # A — every finding carries a verdict before the commit
-        for line in body.splitlines():
-            if line.rstrip().endswith(SENTINEL):
-                problems.append(
-                    f"{path}: a finding still reads `{SENTINEL}`. Every finding "
-                    "gets exactly one verdict before this commit "
-                    '(hold-the-line, "The six verdicts").'
-                )
-                break
-
-        # B — a build commit's ticket has cleared the bar
-        adds_bar = any(l.startswith("## Bar,") for l in added)
-        adds_review = any(l.startswith("## Review findings,") for l in added)
+        if any(line.rstrip().endswith(SENTINEL) for line in body.splitlines()):
+            problems.append(f"{path}: pending finding ({SENTINEL}); give it a verdict (hold-the-line).")
+        adds_bar = any(line.startswith("## Bar,") for line in added)
+        adds_review = any(line.startswith("## Review findings,") for line in added)
         if adds_bar and not adds_review:
-            if count(r"^## Resolution", body) < 1:
-                problems.append(
-                    f"{path}: `## Bar,` added with no `## Resolution` block "
-                    "(standing-bar, per-ticket line 6; build-slice §6)."
-                )
+            if not count(r"^## Resolution", body):
+                problems.append(f"{path}: Bar added without Resolution (standing-bar, line 6).")
             if count(r"^## Handoff", body):
-                problems.append(
-                    f"{path}: `## Bar,` added while a `## Handoff` block "
-                    "stands (standing-bar, per-ticket line 6; build-slice §6)."
-                )
+                problems.append(f"{path}: Bar added with a Handoff (standing-bar, line 6).")
             if count(r"^- \[ \]", body):
-                problems.append(
-                    f"{path}: `## Bar,` added with an unticked `- [ ]` "
-                    "criterion (standing-bar, per-ticket line 1)."
-                )
-
-        # C — `resolved` is written by the review, in the review's commit
-        if status == "M":
-            adds_resolved = any(
-                re.match(r"^\*\*Status:\*\*[ \t]*resolved\b", l) for l in added
-            )
-            if adds_resolved and not adds_review:
-                problems.append(
-                    f"{path}: `**Status:** resolved` added outside a review "
-                    "commit. Only a closing review cycle writes that value "
-                    '(review-pass, "Closing the cycle").'
-                )
-
-    if SPEC.match(path) and any(l.startswith("## Close,") for l in added):
+                problems.append(f"{path}: Bar added with an unticked criterion (standing-bar, line 1).")
+        if before and any(re.match(r"^\*\*Status:\*\*[ \t]*resolved\b", line) for line in added):
+            if not adds_review:
+                problems.append(f"{path}: resolved outside a closing review (review-pass).")
+    if SPEC.match(path) and any(line.startswith("## Close,") for line in added):
         folder = os.path.dirname(path)
-        for name in sorted(os.listdir(os.path.join(cwd, folder))):
-            if not NAME_ONLY.match(name):
-                continue
-            value = status_value(read(cwd, os.path.join(folder, name)))
-            first = value.split()[0].strip("*_`.,").lower() if value else ""
-            if first not in CLOSED_STATUS:
-                problems.append(
-                    f"{folder}/{name}: `**Status:** {value}` while `## Close,` "
-                    "is added to the spec. Every ticket is `resolved`, "
-                    "`declined`, or moved out first (close-effort, walk 3)."
-                )
+        for ticket, content in files.items():
+            if TICKET.match(ticket) and os.path.dirname(ticket) == folder:
+                value = status_value(content)
+                first = value.split()[0].strip("*_`.,").lower()
+                if first not in CLOSED_STATUS:
+                    problems.append(f"{ticket}: Status {value} while closing (close-effort, walk 3).")
     return problems
 
 
 def main():
     payload = json.load(sys.stdin)
     command = (payload.get("tool_input") or {}).get("command") or ""
-    if not isinstance(command, str) or not is_git_commit(command):
+    if not isinstance(command, str):
         return 0
-
-    # git prints paths relative to the repo root, so run everything from there:
-    # a commit made from a subdirectory would otherwise check
-    # `<subdir>/docs/issues` and read every path against the wrong prefix.
-    started_in = payload.get("cwd") or os.getcwd()
-    root = git(started_in, "rev-parse", "--show-toplevel")
-    if root.returncode != 0 or not root.stdout.strip():
+    cwd = command_repo(command, payload.get("cwd") or os.getcwd())
+    if cwd is None:
         return 0
-    cwd = root.stdout.strip()
-
-    # A merge, rebase, cherry-pick or revert commit carries the other side's
-    # work as "added" lines. Nothing here can judge it, so stay out of the way.
+    # Alternate inherited Git contexts cannot be reconstructed from cwd alone.
+    if any(os.environ.get(key) for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE",
+                                           "GIT_COMMON_DIR", "GIT_CONFIG_COUNT")):
+        raise GuardError(HELP)
+    cwd = git(cwd, "rev-parse", "--show-toplevel").stdout.strip()
     git_dir = git(cwd, "rev-parse", "--absolute-git-dir").stdout.strip()
-    if git_dir and any(os.path.exists(os.path.join(git_dir, p)) for p in IN_PROGRESS):
+    if any(os.path.exists(os.path.join(git_dir, name)) for name in IN_PROGRESS):
         return 0
-
-    base = "HEAD"
-    if git(cwd, "rev-parse", "--verify", "HEAD").returncode != 0:
-        base = git(cwd, "hash-object", "-t", "tree", "/dev/null").stdout.strip()
-        if not base:
-            return 0
-
+    head = git(cwd, "rev-parse", "--verify", "HEAD", optional=True)
+    base = head.stdout.strip() if head.returncode == 0 else git(
+        cwd, "hash-object", "-t", "tree", "/dev/null").stdout.strip()
+    tree = git(cwd, "write-tree").stdout.strip()
+    paths = changed_paths(cwd, base, tree)
+    if not paths:
+        return 0
+    before, after = tree_files(cwd, base), tree_files(cwd, tree)
     problems = []
-    for path, (status, specs) in sorted(changed_paths(cwd, base).items()):
-        try:
-            problems += check(cwd, base, path, status, specs)
-        except Exception as exc:  # one unreadable file must not void the rest
-            print(f"plumbline guard-commit: {path} skipped ({exc})",
-                  file=sys.stderr)
-    if not problems:
-        return 0
-    for line in problems:
-        print(line, file=sys.stderr)
-    print(
-        "Commit blocked by plumbline's commit guard. Fix the lines above, or "
-        "commit outside this session.",
-        file=sys.stderr,
-    )
-    return 2
+    for path, old_path in paths.items():
+        if path in after:
+            problems.extend(check(path, before.get(old_path, ""), after[path], after))
+    if problems:
+        print("\n".join(problems), file=sys.stderr)
+        print("Commit blocked by plumbline. Fix and stage the listed files.", file=sys.stderr)
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except Exception as exc:  # fail open: a hook bug must not block a commit
+    except GuardError as exc:
+        print(f"plumbline guard-commit: {exc}", file=sys.stderr)
+        sys.exit(2)
+    except Exception as exc:
         print(f"plumbline guard-commit: skipped ({exc})", file=sys.stderr)
         sys.exit(0)

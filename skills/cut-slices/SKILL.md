@@ -17,9 +17,13 @@ component built correctly and every ticket carrying half a seam
 The skeleton makes the thinnest possible end-to-end path run for real.
 Hardcode everything that is not the path. One input at the front, one
 observable result at the back, through every layer the real feature crosses.
-In a fresh effort it is ticket `01`; in a successor effort it takes the next
-free number ("Numbers are addresses", below) — the exemptions and duties in
-this flow attach to *the skeleton*, not to the number.
+In a fresh effort it is ticket `01`. A successor reuses the verified existing
+path and verify command recorded by close-effort; it needs no new skeleton for
+that same path. If its new path does not run yet, add a skeleton at the next
+free number, record `**Walking skeleton:** NN` in the successor spec, and make
+all unfinished successor tickets depend on it. It has no dependency on those
+tickets: it is the minimum path, not their full functionality. The exemptions
+and duties attach to the skeleton, not its number.
 
 State it as a sentence before cutting anything else:
 
@@ -279,13 +283,15 @@ A forward reference with an address is a plan.
 ## Rule 6 — An effort has a ticket ceiling
 
 Hard ceiling: **25 tickets.** At 25, stop and split into a second effort with
-its own spec and its own walking skeleton. No human holds the state of an
+its own spec and a verified path (inherited or a new skeleton per Rule 1). No human holds the state of an
 effort that was never allowed to close.
 
 ## Ticket template
 
 ```markdown
 # NN — <what runs after this, as a sentence>
+
+**ID:** <origin-effort>/NN
 
 **What to build:** <two to four sentences. What exists after, and what is
 broken today.>
@@ -341,25 +347,20 @@ line.
 
 ## Numbers are addresses
 
-Ticket numbers are **two digits with a leading zero** — `01`, not `1` — and the
-build commit's `(ticket NN)` suffix carries the same two digits. Splits are
-`14a`, `14b`, sorting `14 < 14a < 14b < 15`.
+Read `${CLAUDE_PLUGIN_ROOT}/references/ticket-lifecycle.md` for stable IDs,
+commit suffixes and old-ticket compatibility. Numbers are two digits, `01`,
+with split letters `14a`, `14b`; sort `14 < 14a < 14b < 15`. Never renumber.
 
-Never renumber; split instead, by the procedure `hold-the-line` owns. In-code
-comments and other tickets point at numbers, the pointers are not compiled, and
-nothing catches a stale one.
+Files remain `docs/issues/<effort>/NN-<slug>.md`, numbered in dependency order
+from the next free number. A move preserves both number and ID; stop before a
+filename/number collision rather than overwriting a destination.
 
-Tickets are files: `docs/issues/<effort>/NN-<slug>.md`, one file per ticket,
-beside `shape.md` and `spec.md` in the effort folder itself — there is no
-second `issues/` level. Number them **in dependency order**, from the next free
-number in the folder (`01` in a fresh effort). With no effort named, it is the
-one under `docs/issues/` that has a `spec.md` and no `NN-*.md` tickets yet; if
-several qualify, list them and ask which.
-
-Numbers are unique inside one effort, not across efforts. A ticket moved into a
-successor effort keeps its number, and the successor's walking skeleton takes
-the next free number instead of `01`. The skeleton is the first ticket **built**
-in an effort; it does not have to be the lowest number.
+Without an effort argument, select the sole spec with no tickets; if several
+qualify, ask. With an explicit successor effort, read its existing tickets and
+handover before adding missing work. Preserve existing files, numbers, IDs,
+criteria and history. Add a new skeleton only if Rule 1 requires it; otherwise
+the inherited frontier is ready for build. Record the dependency graph in the
+plan check and ensure there is a runnable frontier, not a cycle.
 
 ## Before you hand the plan over
 
