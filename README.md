@@ -251,7 +251,7 @@ prerequisites. They are useful standalone:
 | `cold-read` | Gates 2, 3, 5, 6. Full pass, then findings, then repair. |
 | `price-the-wall` | Gate 4, the moment "that's not possible" shows up. |
 | `structured-debugging` | Gate 4, only when the cause is unknown. |
-| `prototype` | Gate 2, a shape's open question tagged `PROTOTYPE`. Throwaway code on its own branch; only the answer reaches the spec. |
+| `prototype` | Gate 2, a shape's open question tagged `PROTOTYPE`: logic only, judged by the agent. The UI branch runs standalone. Code stays on its own branch; the answer reaches the spec and the tickets. |
 
 Shared identity and state transitions:
 [`references/ticket-lifecycle.md`](references/ticket-lifecycle.md).
@@ -301,9 +301,10 @@ of the measurements in `docs/DIAGNOSIS.md` rather than from either set.
 by the same author, bundled here so the plugin runs without prerequisites.
 
 `prototype` is adapted from Matt Pocock's skill of the same name. The logic
-and UI branches and the throwaway rules are his; who judges, the headless run
-of a logic model, and the branch that holds the code while only the answer
-reaches the spec are plumbline's.
+and UI branches, the throwaway rules, the throwaway branch and the pointer to
+it on the implementation ticket are his. Who judges, the headless run of a
+logic model, the worktree from the first line on and the spec line between
+prototype and ticket are plumbline's.
 
 ## License
 

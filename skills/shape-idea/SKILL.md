@@ -101,7 +101,8 @@ into Open Questions and move on.
 Guardrail, because this one failure is worth naming once: a question about a
 library, a schema, a field name, a file location, or the internal structure of
 the code is **Craft**. It is parked, never asked. If the answer changes what the
-product does or what it costs, it was Product all along.
+product does or what it costs, it was Product all along — and so is how
+something looks: ask it, never park it as `PROTOTYPE`.
 
 ## A sub-problem is not a bucket
 

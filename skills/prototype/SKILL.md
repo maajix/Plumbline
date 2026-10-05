@@ -6,7 +6,7 @@ description: Builds a throwaway prototype that answers one design question, keep
 # Prototype
 
 A prototype is **throwaway code that answers a question**. The question decides
-the shape, and the answer is the only part that ships.
+the shape, and the answer is the only part that reaches the main branch as is.
 
 Adapted from Matt Pocock's `prototype` skill
 ([mattpocock/skills](https://github.com/mattpocock/skills) @ `3216582`).
@@ -20,47 +20,53 @@ question is pure waste, and nobody notices, because it still runs.
 
 ## Pick a branch
 
-Identify which question is being answered from that sentence and the surrounding
-code; ask only if neither decides it:
-
 - **"Does this logic / state model hold?"** → [LOGIC.md](LOGIC.md). One
   shareable HTML file over a pure, liftable module, with free-play buttons and
   tabbed walkthroughs that push it through the cases that are hard to reason
   about on paper.
 - **"What should this look like?"** → [UI.md](UI.md). Several radically
   different variations on one route, switchable via a URL search param and a
-  floating bottom bar.
+  floating bottom bar. **Outside an effort only** — see "Who judges".
 
-The two branches produce very different artifacts, so getting this wrong wastes
-the whole prototype. If the question is genuinely ambiguous and the user isn't
-reachable, default to whichever branch better matches the surrounding code (a
-backend module → logic; a page or component → UI) and state the assumption at
-the top of the prototype.
+Inside an effort the branch is always logic. Outside one, identify it from the
+question and the surrounding code; ask only if neither decides it. If the user
+isn't reachable, default to whichever branch better matches the surrounding
+code (a backend module → logic; a page or component → UI) and state the
+assumption at the top of the prototype.
 
 ## Who judges
 
-`shape-idea` already decided who answers what, and a prototype does not move
-the line:
-
-- **Logic: the agent, first.** Run every walkthrough yourself and read the
-  state after each step (LOGIC.md §4). The answer is what the state did.
-  Hand the file to the user only for a situation they alone can decide — put
-  it to them as a concrete edge, "a refund after the invoice closed: allowed?",
-  never as "does this reducer look right?".
-- **UI: the user.** What the product looks like is their judgement. The agent's
-  job is variants different enough for that judgement to mean something.
+- **Inside an effort, the agent.** A `PROTOTYPE` question is Craft
+  (`shape-idea`), so the user never sees it as a question. Drive every scenario
+  yourself (LOGIC.md §4); the answer is what the state did. A scenario that
+  lands on a situation whose answer changes what the product does was Product
+  all along (`shape-idea`'s guardrail): put that one situation to the operator
+  as a concrete edge — "a refund after the invoice closed: allowed?", never
+  "does this reducer look right?" — and record the answer under the spec's
+  **Decided at the edges**. A `PROTOTYPE` question about how something *looks*
+  was mis-parked the same way (`shape-idea`'s guardrail names it): no prototype
+  runs inside the effort. Put it to the operator as one question — they may
+  answer it by running this skill standalone — and record their answer under
+  **Decided at the edges** too.
+- **Outside an effort, the user.** Called directly, both branches are open: the
+  user picks among UI variants, and gets a logic demo after the agent's own run.
 
 ## Rules that apply to both
 
-1. **Throwaway from day one, on its own git branch.** Before the first line,
-   cut `prototype/<effort>-<slug>` from the current HEAD (`prototype/<slug>`
-   outside an effort). On it, place the code next to the module or page it
-   prototypes for, named so a casual reader sees it is a prototype; a throwaway
-   route obeys the project's routing convention, never a new top-level
-   structure.
-2. **Trivial to run.** A UI prototype starts from one command in the project's
-   task runner: `pnpm <name>`, `python <path>`, `bun <path>`. A logic demo is a
-   single HTML file the user double-clicks.
+1. **Throwaway from day one, in its own worktree.** Before the first line,
+   give it branch `prototype/<effort>-<slug>` in a worktree beside the repo,
+   `<slug>` being the question's kebab-case name (`prototype/<slug>` outside an
+   effort): `git worktree add -b <branch> ../<repo>-<branch-with-dashes>`, or
+   with `--orphan` added when the repo has no commit yet. The session's own
+   working tree is never switched, so the shape and spec files still
+   uncommitted at gate 2 stay exactly where they are. In the worktree, place
+   the code next to the code it prototypes for, or where that code would live,
+   named so a casual reader sees it is a prototype; a throwaway route obeys the
+   project's routing convention, never a new top-level structure.
+2. **Trivial to run.** A UI prototype starts with one command — a task-runner
+   script (`pnpm <name>`) or a direct `bun <path>`, `python <path>` — once the
+   worktree has its dependencies installed. A logic demo is a single HTML file
+   the user double-clicks.
 3. **No persistence by default.** State lives in memory. Persistence is the
    thing a prototype would be *checking*, not something it depends on. If the
    question explicitly involves a database, hit a scratch DB or a local file
@@ -71,21 +77,27 @@ the line:
 5. **Surface the state.** After every action (logic) or on every variant switch
    (UI), render the full relevant state so the change is visible.
 6. **Capture it when done.**
-   - Commit on the prototype branch, staging the prototype's files **by path**
-     — never `git add -A`, or whatever the session was writing elsewhere rides
-     along. The message states the question and the verdict.
-   - Switch back to the branch you came from. **Nothing on the prototype branch
-     merges**: the tickets build the decision properly, and may read the
-     prototype from the branch (`git show <branch>:<path>`). Leave the branch;
-     it is the primary source. Push it only when the operator says so.
-   - Record the answer where its reader is. In an effort that is the spec's
-     **Open questions, answered**, one line:
-     `- <question> — PROTOTYPE: <verdict, and why>. Source: prototype/<effort>-<slug> @ <short sha>`.
-     Outside an effort, the commit message and your final message carry it.
-
-A prototype still waiting for its judge is an open question: the spec is not
-done, and it is not "the walking skeleton will show" either — the skeleton
-builds one design, it does not choose between several.
+   - Commit in the worktree, staging **by path** every file the prototype
+     added or edited — a manifest it touched (`package.json` for a new script)
+     included, `git add -A` never. Commit the way
+     `${CLAUDE_PLUGIN_ROOT}/references/ticket-lifecycle.md` "Every commit"
+     says; a message quoting the question with backticks or `$` needs `-F`. The
+     message states the question and the verdict.
+   - Once the judge has seen it, remove the worktree
+     (`git worktree remove <path>`, which refuses while uncommitted files
+     remain — commit them or delete them there). The branch keeps everything.
+   - **Nothing on the prototype branch merges.** Tickets build the decision
+     properly and may read the prototype from the branch
+     (`git show <branch>:<path>`). Leave the branch; it is the primary source.
+   - Record the answer where its reader is. Inside an effort that is the spec's
+     **Open questions, answered**, one line, the question without its
+     `— PROTOTYPE` tag:
+     `- <question> — PROTOTYPE: <verdict, and why>. Source: prototype/<effort>-<slug> @ <short sha>, <main file>`.
+     `cut-slices` quotes that line into the `## Why` of every ticket that
+     builds on it, which is how the builder finds the prototype. Outside an
+     effort, the commit message and your final message carry it.
+   - Until the branch is pushed, that `Source:` resolves only in this clone.
+     Pushing is the operator's call; ask before the spec leaves this clone.
 
 ## In this flow
 

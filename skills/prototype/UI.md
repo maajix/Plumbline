@@ -4,6 +4,10 @@ Generate **several radically different UI variations** on a single route,
 switchable from a floating bottom bar. The user flips between variants in the
 browser and picks one, or steals bits from each.
 
+**Outside an effort only.** Inside one, a question about how something looks
+is Product the shape missed, not a prototype's to answer ([SKILL.md](SKILL.md),
+"Who judges").
+
 If the question is about logic/state rather than what something looks like,
 this is the wrong branch. Use [LOGIC.md](LOGIC.md).
 
@@ -120,7 +124,7 @@ Behaviour:
 - Hidden in production builds: gate on `process.env.NODE_ENV !== 'production'`
   or the equivalent, so even a stray merge can't ship the bar to users.
 
-Put the switcher in a single component, wherever shared UI lives in the project.
+Put the switcher in a single component next to the variants.
 
 ### 5. Run it, then hand it over
 
@@ -135,8 +139,8 @@ from C"**, which is the actual design they want.
 The answer is what the user picked and why — often a mix, so name the parts:
 "B's header, C's sidebar, A's empty state". Capture it and the prototype the way
 [SKILL.md](SKILL.md) rule 6 describes. The full set of variants and the switcher
-stay on the prototype branch; the ticket that builds the page rewrites the
-winner properly, reading it from there for reference.
+stay on the prototype branch; whoever builds the page rewrites the winner
+properly, reading it from there for reference.
 
 ## Anti-patterns
 
@@ -149,4 +153,4 @@ winner properly, reading it from there for reference.
   variant needs to mutate, point it at a stub: the question is "what should this
   look like", not "does the backend work".
 - **Merging the winning variant.** It was written under prototype constraints
-  (no tests, minimal error handling). The ticket rewrites it.
+  (no tests, minimal error handling). Rewrite it when building it for real.

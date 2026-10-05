@@ -31,7 +31,8 @@ intro, not just a comment, so it can be checked later by whoever opens the file.
 
 Put the logic that answers the question in its own `<script id="model">` block,
 written as a small, pure module that could be lifted into the real codebase
-later. The page around it is throwaway; this module isn't.
+later. The page around it is throwaway; this module is the part a ticket
+rebuilds from.
 
 The right shape depends on the question:
 
@@ -84,29 +85,38 @@ colour. No animations, nothing that competes with the state and the buttons.
 
 ### 4. Run it yourself first
 
-The model block references no browser by rule, so it runs outside one: copy it
-out and run it with the project's JS runtime (`node`, `bun`, `deno`), feeding it
-each scenario and printing the state after every step. That printout is the
-evidence the answer cites. It asserts nothing, so it is not a test suite — it
-shows.
+The model block references no browser by rule, so it runs outside one. Write a
+small runner next to the demo that **extracts the block from the HTML file each
+time it runs** — a kept copy is a second model, and the two drift — then feeds
+it every scenario and prints the state after every step. Run it with whatever
+JS runtime the machine has (`node`, `bun`, `deno`); with none, drive each
+walkthrough through a browser tool instead and write down the state it showed
+after every step. With neither, the run did not happen: say so in the answer,
+which is then a belief, not evidence.
+
+The printout is the evidence the answer cites. Save it next to the demo as
+`<demo>.run.txt` and commit it with the demo, plus the runner if there is one
+(SKILL.md rule 6). It asserts nothing, so it is not a test suite — it shows.
 
 Read it for the moments that matter: a state that "shouldn't be possible", a
 legal action that was refused, a result that differs from what the question
 assumed. Those are the bugs in the *idea*, which is the whole point.
 
-### 5. Hand over what needs a judge
+### 5. Hand over only what needs a judge
 
-If the printout settles the question, it is answered — no handover. If it lands
-on a situation only the user can decide ([SKILL.md](SKILL.md), "Who judges"),
-send them the file or open it, name the tab that shows the situation, and ask
-the concrete edge. If they want new actions or a new scenario, add them to the
-model block, re-run §4. Prototypes evolve.
+Inside an effort, the printout settles the question, and only a situation that
+was Product all along goes to the operator, as one concrete edge
+([SKILL.md](SKILL.md), "Who judges"). Name the tab that shows it, so they can
+open the file and watch it happen. Outside an effort, send the user the file or
+open it for them after your own run. If anyone wants new actions or a new
+scenario, add them to the model block and re-run §4. Prototypes evolve.
 
 ### 6. Capture the answer and the prototype
 
 Capture both the way [SKILL.md](SKILL.md) rule 6 describes. The validated
 module stays on the prototype branch with its shell; the ticket that builds the
-real thing lifts it from there and gives it the tests the prototype skipped.
+real thing reads it there as its reference and rebuilds it under its own
+tests, test first (`build-slice`).
 
 ## Anti-patterns
 

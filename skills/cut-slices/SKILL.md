@@ -328,6 +328,10 @@ quote it here — it is the number the live run must face.>
 <On greenfield, where there is nothing to measure yet: the sentence from the
 spec this ticket serves, quoted, and what goes wrong for the operator if it is
 built differently. Say which mode you are in.>
+
+<If this ticket builds on a question the spec answered by `prototype`, quote
+that answer line verbatim, `Source:` included — it is how the builder finds
+the prototype branch.>
 ```
 
 Angle-bracket text in this template is placeholder guidance: replace it or
