@@ -135,15 +135,20 @@ der Skill, der den Prototyp tatsächlich baut. Er stammt aus Pococks
 `prototype`: ein Logik-Zweig (eine HTML-Datei über einem reinen Modul) und ein
 UI-Zweig (Varianten auf einer Route, umschaltbar per `?variant=`).
 
-Drei Anpassungen an diesen Flow. **Wer urteilt:** Logik prüft der Agent
-selbst, indem er jedes Szenario headless laufen lässt und den Zustand nach
-jedem Schritt liest; der Nutzer bekommt nur eine konkrete Kante, die allein er
-entscheiden kann. UI beurteilt der Nutzer, denn wie das Produkt aussieht, ist
-eine Produktfrage. **Wohin der Code geht:** auf einen eigenen Branch
-`prototype/<effort>-<slug>`, der nie gemergt wird. **Wohin die Antwort geht:**
-eine Zeile im Spec mit Branch und Commit als Quelle. Die Tickets bauen die
-Entscheidung sauber nach; der Prototyp ist kein Walking Skeleton und nie ein
-Ticket.
+Den Throwaway-Branch und den Verweis darauf im Implementierungsticket hat
+schon Pocock. Drei Anpassungen an diesen Flow.
+**Wer urteilt:** Im Effort ist eine `PROTOTYPE`-Frage Craft, also läuft nur der
+Logik-Zweig, und der Agent prüft ihn selbst, indem er jedes Szenario headless
+laufen lässt und den Zustand nach jedem Schritt liest. Der Nutzer bekommt nur
+eine Kante, die von Anfang an eine Produktfrage war. Der UI-Zweig läuft nur
+außerhalb eines Efforts, denn wie etwas aussieht, ist eine Produktfrage und
+gehört ins Interview (`shape-idea` sagt das in seiner Leitplanke). **Wo der
+Code entsteht:** vor der ersten Zeile in einem eigenen Worktree, nicht erst am
+Ende auf einem Branch, damit die in Tor 2 noch uncommitteten Shape- und
+Spec-Dateien unberührt bleiben; gemergt wird nie. **Wohin die Antwort geht:**
+eine Zeile im Spec mit Branch, Commit und Datei als Quelle, die `cut-slices`
+ins `## Why` jedes Tickets zitiert, das darauf baut. Der Prototyp ist kein Walking Skeleton und
+nie ein Ticket.
 
 ## Warum Tor 2 einen eigenen Skill hat
 
