@@ -4,7 +4,7 @@
 This plugin is the same thing for agent-built features: it proves a slice runs
 end to end instead of taking "cut vertically" on trust.
 
-Eight gates, eleven skills, one rule that stops the backlog from growing once
+Eight gates, twelve skills, one rule that stops the backlog from growing once
 per finished ticket. MIT.
 
 ```
@@ -243,7 +243,7 @@ The eight gates:
 | `hold-the-line` | A verdict for every finding. Six options, severity decides. |
 | `close-effort` | Ends an effort instead of letting it drift. |
 
-Three base skills the flow calls are **bundled**, so the plugin runs without
+Four base skills the flow calls are **bundled**, so the plugin runs without
 prerequisites. They are useful standalone:
 
 | Skill | Where the flow needs it |
@@ -251,6 +251,7 @@ prerequisites. They are useful standalone:
 | `cold-read` | Gates 2, 3, 5, 6. Full pass, then findings, then repair. |
 | `price-the-wall` | Gate 4, the moment "that's not possible" shows up. |
 | `structured-debugging` | Gate 4, only when the cause is unknown. |
+| `prototype` | Gate 2, a shape's open question tagged `PROTOTYPE`. Throwaway code on its own branch; only the answer reaches the spec. |
 
 Shared identity and state transitions:
 [`references/ticket-lifecycle.md`](references/ticket-lifecycle.md).
@@ -298,6 +299,11 @@ of the measurements in `docs/DIAGNOSIS.md` rather than from either set.
 
 `cold-read`, `price-the-wall` and `structured-debugging` are standalone skills
 by the same author, bundled here so the plugin runs without prerequisites.
+
+`prototype` is adapted from Matt Pocock's skill of the same name. The logic
+and UI branches and the throwaway rules are his; who judges, the headless run
+of a logic model, and the branch that holds the code while only the answer
+reaches the spec are plumbline's.
 
 ## License
 

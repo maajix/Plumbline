@@ -76,7 +76,8 @@ folder path in place of the why.
 shape. Add any the spec had to settle.
 
 **Open questions, answered.** The shape parked these as agent work. Answer them
-here — read the source, run a prototype — and record the answer. They do not
+here — read the source, run `prototype` on a `PROTOTYPE` one — and record the
+answer; a prototype's line carries its branch, in that skill's form. They do not
 become tickets: a research question produces nothing anything reads, so it can
 carry no seam. What survives into the tickets is the answer, not the question.
 
@@ -135,13 +136,17 @@ reads would be the same defect, moved one file to the right.
 stale path in a spec is read as fact. Name types and behaviours; let the
 builder find the file.
 
-The verify command is the first of two exceptions: a stale command fails the
+The verify command is the first of three exceptions: a stale command fails the
 moment someone runs it, where a stale path is read as fact.
 
 `docs/issues/` addresses carried from the shape's `split off:` bullets are
 the second: they are the flow's own bookkeeping, and `close-effort`'s
 split-off ledger runs `ls` over every one — a stale address is rewritten
 there or handed to `hold-the-line` as a finding, never left standing.
+
+A `prototype` answer's `Source:` branch and commit are the third: the branch
+never merges and the commit pins what the answer was read from, so neither
+goes stale the way a working-tree path does.
 
 **Say what is true now.** Where the spec describes existing behaviour, read the
 current source and say what it actually does. A spec that describes the code as

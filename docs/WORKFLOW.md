@@ -75,10 +75,10 @@ mitgeführt; historische Blöcke bleiben erhalten. IDs ändern sich nicht.
 Ein Close, das Codeänderungen oder neue Tests braucht, wartet auf deren Build
 und Review. Sein Commit enthält ausschließlich geprüfte Abschlussartefakte.
 
-## Die drei gebündelten Basis-Skills
+## Die vier gebündelten Basis-Skills
 
-Seit 0.3.0 liefert das Plugin sie mit — als eigene Skills unter `skills/`,
-weil sie auch außerhalb des Flows nützlich sind.
+Seit 0.3.0 liefert das Plugin sie mit (`prototype` seit 0.7.0) — als eigene
+Skills unter `skills/`, weil sie auch außerhalb des Flows nützlich sind.
 
 ### `cold-read` — Tor 2, 3, 5 und 6
 
@@ -126,6 +126,24 @@ an `hold-the-line`.
 Nicht bei jedem Fehler. Nur wenn die Ursache unbekannt ist. Ein Agent, der
 mitten im Ticket rät statt vier Hypothesen zu schreiben, produziert die
 Reparatur, die später das nächste Ticket wird.
+
+### `prototype` — Tor 2
+
+`shape-idea` parkt technische Unbekannte mit `PROTOTYPE`, `write-spec`
+beantwortet sie unter "Open questions, answered". Dazwischen fehlte bis 0.7.0
+der Skill, der den Prototyp tatsächlich baut. Er stammt aus Pococks
+`prototype`: ein Logik-Zweig (eine HTML-Datei über einem reinen Modul) und ein
+UI-Zweig (Varianten auf einer Route, umschaltbar per `?variant=`).
+
+Drei Anpassungen an diesen Flow. **Wer urteilt:** Logik prüft der Agent
+selbst, indem er jedes Szenario headless laufen lässt und den Zustand nach
+jedem Schritt liest; der Nutzer bekommt nur eine konkrete Kante, die allein er
+entscheiden kann. UI beurteilt der Nutzer, denn wie das Produkt aussieht, ist
+eine Produktfrage. **Wohin der Code geht:** auf einen eigenen Branch
+`prototype/<effort>-<slug>`, der nie gemergt wird. **Wohin die Antwort geht:**
+eine Zeile im Spec mit Branch und Commit als Quelle. Die Tickets bauen die
+Entscheidung sauber nach; der Prototyp ist kein Walking Skeleton und nie ein
+Ticket.
 
 ## Warum Tor 2 einen eigenen Skill hat
 
