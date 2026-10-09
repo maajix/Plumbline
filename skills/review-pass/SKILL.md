@@ -111,9 +111,12 @@ layer by design, so judge it by whether one path runs, not by its size.
 ## Lead with leverage
 
 Order findings by what they cost, not by what is easy to spot. Seam and
-correctness first, then structure, then everything else. A few high-conviction
-findings beat a long list — if there is one structural problem and ten naming
-nits, the structural problem **is** the review.
+correctness first, then structure, then everything else. If there is one
+structural problem and ten naming nits, the structural problem leads and the
+nits follow it. Ordering is not filtering: record every finding the readers
+report, because one dropped here is a decline nobody wrote down.
+`hold-the-line` decides what is not worth doing, and its `nit` row already
+allows DECLINE.
 
 Label each: `blocker`, `required`, `nit`. One line each:
 
