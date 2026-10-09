@@ -4,7 +4,7 @@
 This plugin is the same thing for agent-built features: it proves a slice runs
 end to end instead of taking "cut vertically" on trust.
 
-Eight gates, twelve skills, one rule that stops the backlog from growing once
+Eight gates, thirteen skills, one rule that stops the backlog from growing once
 per finished ticket. MIT.
 
 ```
@@ -253,6 +253,12 @@ prerequisites. They are useful standalone:
 | `structured-debugging` | Gate 4, only when the cause is unknown. |
 | `prototype` | Gate 2, a shape's open question tagged `PROTOTYPE`: logic only, judged by the agent. The UI branch runs standalone. Code stays on its own branch; the answer reaches the spec and the tickets. |
 
+One skill stands outside the flow, user-invoked only:
+
+| Skill | What it is for |
+|---|---|
+| `prompt-rewrite` | Turns a raw prompt into a copy-ready prompt for a fresh session, in the format Anthropic's prompting guidance for Claude Opus 5.5 recommends. Reads the workspace to resolve every named thing, changes no file, and outputs only the prompt. |
+
 Shared identity and state transitions:
 [`references/ticket-lifecycle.md`](references/ticket-lifecycle.md).
 A successor reuses a verified end-to-end path and its verify command; only a
@@ -305,6 +311,9 @@ and UI branches, the throwaway rules, the throwaway branch and the pointer to
 it on the implementation ticket are his. Who judges, the headless run of a
 logic model, the worktree from the first line on and the spec line between
 prototype and ticket are plumbline's.
+
+`prompt-rewrite` condenses Anthropic's prompting guidance for Claude Opus 5.5
+and its general prompting best practices; both pages are linked in the skill.
 
 ## License
 
